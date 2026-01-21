@@ -3,6 +3,8 @@ dist/
 
 # generated types
 .astro/
+.wrangler/
+drizzle/
 
 # dependencies
 node_modules/

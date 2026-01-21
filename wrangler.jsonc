@@ -1,0 +1,28 @@
+{
+  "main": "dist/_worker.js/index.js",
+  "name": "tshirt-stryd",
+  "compatibility_date": "2026-01-21",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "./dist",
+  },
+  "observability": {
+    "enabled": true,
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "tshirt-stryd",
+      "database_id": "3c1b11b0-1122-4382-b74f-e682334f2289",
+      "remote": true,
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "tshirt-stryd-images",
+      "remote": true,
+    },
+  ],
+}
