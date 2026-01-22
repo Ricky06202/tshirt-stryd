@@ -23,6 +23,12 @@ const StylesManager: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Modals state
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmId, setConfirmId] = useState<number | null>(null)
+  const [errorOpen, setErrorOpen] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
   useEffect(() => {
     fetchStyles()
   }, [])
@@ -47,13 +53,36 @@ const StylesManager: React.FC = () => {
     .sort((a, b) => Number(a) - Number(b))
     .map(Number)
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('¿Seguro que quieres eliminar este diseño?')) return
-    await fetch('/api/admin/estilos', {
-      method: 'DELETE',
-      body: JSON.stringify({ id }),
-    })
-    fetchStyles()
+  const openConfirmDelete = (id: number) => {
+    setConfirmId(id)
+    setConfirmOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!confirmId) return
+    try {
+      const res = await fetch('/api/admin/estilos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: confirmId }),
+      })
+      if (!res.ok) {
+        let message = 'No se pudo borrar el estilo'
+        try {
+          const errJson = (await res.json()) as { error?: string }
+          if (errJson && typeof errJson.error === 'string') message = errJson.error
+        } catch (_) {}
+        throw new Error(message)
+      }
+      setConfirmOpen(false)
+      setConfirmId(null)
+      fetchStyles()
+    } catch (e) {
+      console.error(e)
+      setErrorMessage('Error al borrar el estilo. Intenta nuevamente.')
+      setErrorOpen(true)
+      setConfirmOpen(false)
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -93,7 +122,8 @@ const StylesManager: React.FC = () => {
       if (!editingId) {
         // MODE: ADD
         if (!selectedFile) {
-          alert('Debes seleccionar una imagen para el nuevo estilo')
+          setErrorMessage('Debes seleccionar una imagen para el nuevo estilo')
+          setErrorOpen(true)
           setIsSubmitting(false)
           return
         }
@@ -149,7 +179,8 @@ const StylesManager: React.FC = () => {
       fetchStyles()
     } catch (error) {
       console.error(error)
-      alert('Hubo un error al procesar la solicitud')
+      setErrorMessage('Hubo un error al procesar la solicitud')
+      setErrorOpen(true)
     } finally {
       setIsSubmitting(false)
     }
@@ -341,7 +372,7 @@ const StylesManager: React.FC = () => {
                       </svg>
                     </button>
                     <button
-                      onClick={() => handleDelete(style.id)}
+                      onClick={() => openConfirmDelete(style.id)}
                       className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                       title="Eliminar"
                     >
@@ -361,6 +392,48 @@ const StylesManager: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Confirm Delete Modal */}
+      {confirmOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
+          <div className="bg-[#151515] border border-white/10 rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <h4 className="text-lg font-bold mb-2">Eliminar diseño</h4>
+            <p className="text-gray-400 mb-6">¿Seguro que quieres eliminar este diseño? Esta acción no se puede deshacer.</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => { setConfirmOpen(false); setConfirmId(null) }}
+                className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {errorOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
+          <div className="bg-[#151515] border border-white/10 rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <h4 className="text-lg font-bold mb-2 text-red-400">Ocurrió un error</h4>
+            <p className="text-gray-400 mb-6">{errorMessage}</p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setErrorOpen(false)}
+                className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

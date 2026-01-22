@@ -123,17 +123,15 @@ const orders = await db
                           )}
                         </button>
                       </form>
-                      <form method="post" action="/api/pedidos/delete" onsubmit="return confirm('¿Seguro que deseas borrar este pedido? Esta acción no se puede deshacer.')">
-                        <input type="hidden" name="id" value={order.id} />
-                        <button
-                          type="submit"
-                          class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
-                          title="Borrar pedido"
-                          aria-label="Borrar pedido"
-                        >
-                          <TrashIcon />
-                        </button>
-                      </form>
+                      <button
+                        type="button"
+                        class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                        title="Borrar pedido"
+                        aria-label="Borrar pedido"
+                        data-delete-id={order.id}
+                      >
+                        <TrashIcon />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -156,4 +154,70 @@ const orders = await db
       </div>
     </div>
   </main>
+
+  <div
+    id="delete-modal"
+    class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60"
+  >
+    <div
+      class="bg-[#151515] border border-white/10 rounded-xl p-6 w-full max-w-md shadow-2xl"
+    >
+      <h4 class="text-lg font-bold mb-2">Eliminar pedido</h4>
+      <p class="text-gray-400 mb-6">
+        ¿Seguro que quieres eliminar este pedido? Esta acción no se puede deshacer.
+      </p>
+      <div class="flex justify-end gap-3">
+        <button
+          type="button"
+          id="delete-cancel"
+          class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+        >
+          Cancelar
+        </button>
+        <form method="post" action="/api/pedidos/delete" id="delete-form">
+          <input type="hidden" name="id" id="delete-id" />
+          <button
+            type="submit"
+            class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold"
+          >
+            Eliminar
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById('delete-modal');
+    const deleteIdInput = document.getElementById('delete-id');
+    const cancelBtn = document.getElementById('delete-cancel');
+
+    document.addEventListener('click', (ev) => {
+      const target = ev.target as HTMLElement | null;
+      if (!target) return;
+      const button = target.closest('[data-delete-id]') as HTMLElement | null;
+      if (!button) return;
+
+      const id = button.getAttribute('data-delete-id');
+      if (!id || !modal || !deleteIdInput) return;
+
+      deleteIdInput.setAttribute('value', id);
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+    });
+
+    cancelBtn?.addEventListener('click', () => {
+      modal?.classList.add('hidden');
+      modal?.classList.remove('flex');
+      deleteIdInput?.setAttribute('value', '');
+    });
+
+    modal?.addEventListener('click', (ev) => {
+      if (ev.target === modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+        deleteIdInput?.setAttribute('value', '');
+      }
+    });
+  </script>
 </Layout>

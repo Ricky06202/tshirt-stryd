@@ -13,6 +13,12 @@ const SizesManager: React.FC = () => {
   const [editingId, setEditingId] = useState<number | null>(null)
   const [formData, setFormData] = useState({ talla: '', nombre: '' })
 
+  // Modals state
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [confirmId, setConfirmId] = useState<number | null>(null)
+  const [errorOpen, setErrorOpen] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
+
   useEffect(() => {
     fetchSizes()
   }, [])
@@ -24,13 +30,37 @@ const SizesManager: React.FC = () => {
     setLoading(false)
   }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('¿Eliminar talla?')) return
-    await fetch('/api/admin/tallas', {
-      method: 'DELETE',
-      body: JSON.stringify({ id }),
-    })
-    fetchSizes()
+  const openConfirmDelete = (id: number) => {
+    setConfirmId(id)
+    setConfirmOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!confirmId) return
+    try {
+      const res = await fetch('/api/admin/tallas', {
+        method: 'DELETE',
+        body: JSON.stringify({ id: confirmId }),
+      })
+
+      if (!res.ok) {
+        let message = 'No se pudo borrar la talla'
+        try {
+          const errJson = (await res.json()) as { error?: string }
+          if (errJson && typeof errJson.error === 'string') message = errJson.error
+        } catch (_) {}
+        throw new Error(message)
+      }
+
+      setConfirmOpen(false)
+      setConfirmId(null)
+      fetchSizes()
+    } catch (e) {
+      console.error(e)
+      setErrorMessage('Error al borrar la talla. Intenta nuevamente.')
+      setErrorOpen(true)
+      setConfirmOpen(false)
+    }
   }
 
   const handleEdit = (size: Talla) => {
@@ -48,15 +78,30 @@ const SizesManager: React.FC = () => {
     const method = editingId ? 'PUT' : 'POST'
     const body = editingId ? { ...formData, id: editingId } : formData
 
-    await fetch(url, {
-      method,
-      body: JSON.stringify(body),
-    })
+    try {
+      const res = await fetch(url, {
+        method,
+        body: JSON.stringify(body),
+      })
 
-    setFormData({ talla: '', nombre: '' })
-    setIsAdding(false)
-    setEditingId(null)
-    fetchSizes()
+      if (!res.ok) {
+        let message = 'No se pudo guardar la talla'
+        try {
+          const errJson = (await res.json()) as { error?: string }
+          if (errJson && typeof errJson.error === 'string') message = errJson.error
+        } catch (_) {}
+        throw new Error(message)
+      }
+
+      setFormData({ talla: '', nombre: '' })
+      setIsAdding(false)
+      setEditingId(null)
+      fetchSizes()
+    } catch (e) {
+      console.error(e)
+      setErrorMessage('Hubo un error al guardar la talla')
+      setErrorOpen(true)
+    }
   }
 
   const cancelAction = () => {
@@ -137,7 +182,7 @@ const SizesManager: React.FC = () => {
                 </svg>
               </button>
               <button
-                onClick={() => handleDelete(size.id)}
+                onClick={() => openConfirmDelete(size.id)}
                 className="p-2 text-gray-500 hover:text-red-500 transition-colors"
               >
                 <svg
@@ -153,6 +198,53 @@ const SizesManager: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Confirm Delete Modal */}
+      {confirmOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
+          <div className="bg-[#151515] border border-white/10 rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <h4 className="text-lg font-bold mb-2">Eliminar talla</h4>
+            <p className="text-gray-400 mb-6">
+              ¿Seguro que quieres eliminar esta talla? Esta acción no se puede deshacer.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setConfirmOpen(false)
+                  setConfirmId(null)
+                }}
+                className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Modal */}
+      {errorOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60">
+          <div className="bg-[#151515] border border-white/10 rounded-xl p-6 w-full max-w-md shadow-2xl">
+            <h4 className="text-lg font-bold mb-2 text-red-400">Ocurrió un error</h4>
+            <p className="text-gray-400 mb-6">{errorMessage}</p>
+            <div className="flex justify-end">
+              <button
+                onClick={() => setErrorOpen(false)}
+                className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
