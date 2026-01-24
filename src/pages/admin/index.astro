@@ -1,17 +1,45 @@
 ---
 import Layout from '../../layouts/Layout.astro'
+const { user } = Astro.locals;
 ---
 
 <Layout>
   <main class="py-20 px-6 min-h-screen">
     <div class="max-w-5xl mx-auto">
-      <header class="mb-12">
-        <h1 class="text-4xl font-bold text-white mb-2">
-          Panel de Administración
-        </h1>
-        <p class="text-gray-400">
-          Gestiona tus pedidos, estilos y tallas desde un solo lugar.
-        </p>
+      <header class="mb-12 flex justify-between items-start">
+        <div>
+          <h1 class="text-4xl font-bold text-white mb-2">
+            Panel de Administración
+          </h1>
+          <p class="text-gray-400">
+            Gestiona tus pedidos, estilos y tallas desde un solo lugar.
+          </p>
+        </div>
+        {user && (
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-3 bg-white/5 border border-white/10 px-4 py-2 rounded-2xl">
+              <div class="w-8 h-8 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div class="hidden sm:block">
+                <p class="text-[10px] font-black text-gray-500 uppercase tracking-widest leading-none mb-1">Bienvenido,</p>
+                <p class="text-xs font-bold text-white leading-none">{user.name}</p>
+              </div>
+            </div>
+            
+            <a 
+              href="/cdn-cgi/access/logout" 
+              class="p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all duration-300 group"
+              title="Cerrar sesión"
+            >
+              <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </a>
+          </div>
+        )}
       </header>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
