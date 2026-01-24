@@ -23,6 +23,7 @@ export const pedidosTable = sqliteTable('pedidos', {
     .references(() => tallasTable.id),
   total: real('total').notNull(),
   pagado: int('pagado').notNull(), // 0 para no pagado, 1 para pagado (o boolean)
+  abonado: real('abonado').notNull().default(0),
 })
 
 export const pedidoItemsTable = sqliteTable('pedido_items', {

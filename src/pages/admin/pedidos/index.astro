@@ -6,8 +6,23 @@ import { eq, sql } from 'drizzle-orm'
 import CheckIcon from '../../../components/icons/CheckIcon.astro'
 import ClockIcon from '../../../components/icons/ClockIcon.astro'
 import TrashIcon from '../../../components/icons/TrashIcon.astro'
+import PaymentIcon from '../../../components/icons/PaymentIcon.astro'
 
 const db = getDB(Astro.locals.runtime.env)
+
+// Fetch all available styles for the edit modal
+const allStyles = await db
+  .select()
+  .from(estilosTable)
+  .orderBy(estilosTable.estilo, estilosTable.nombre)
+
+const groupedStyles = allStyles.reduce((acc, estilo) => {
+  if (!acc[estilo.estilo]) acc[estilo.estilo] = []
+  acc[estilo.estilo].push(estilo)
+  return acc
+}, {} as Record<number, typeof allStyles>)
+
+const collectionNumbers = Object.keys(groupedStyles).map(Number).sort((a, b) => a - b)
 
 // Fetch orders with aggregated styles and size info
 const orders = await db
@@ -17,20 +32,30 @@ const orders = await db
     nombre: pedidosTable.nombre,
     total: pedidosTable.total,
     pagado: pedidosTable.pagado,
+    abonado: pedidosTable.abonado,
     estilos: sql<string>`group_concat(${estilosTable.nombre}, ', ')`,
+    estiloIds: sql<string>`group_concat(${estilosTable.id}, ',')`,
     talla: tallasTable.talla,
   })
   .from(pedidosTable)
   .leftJoin(pedidoItemsTable, eq(pedidoItemsTable.pedidoId, pedidosTable.id))
   .leftJoin(estilosTable, eq(pedidoItemsTable.estiloId, estilosTable.id))
   .leftJoin(tallasTable, eq(pedidosTable.tallaId, tallasTable.id))
-  .groupBy(pedidosTable.id)
+  .groupBy(
+    pedidosTable.id,
+    pedidosTable.persona,
+    pedidosTable.nombre,
+    pedidosTable.total,
+    pedidosTable.pagado,
+    pedidosTable.abonado,
+    tallasTable.talla
+  )
 ---
 
 <Layout>
-  <main class="py-20 px-6 min-h-screen">
+  <main class="py-10 md:py-20 px-4 sm:px-6 min-h-screen">
     <div class="max-w-5xl mx-auto">
-      <header class="mb-12 flex justify-between items-end">
+      <header class="mb-12 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
           <a
             href="/admin"
@@ -44,15 +69,133 @@ const orders = await db
               ><path d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg
             > Volver al Panel
           </a>
-          <h1 class="text-4xl font-bold text-white">Gestión de Pedidos</h1>
+          <h1 class="text-3xl sm:text-4xl font-bold text-white uppercase tracking-tight">Gestión de Pedidos</h1>
         </div>
-        <div class="text-gray-400 font-medium">
-          Total: <span class="text-white">{orders.length}</span> pedidos
+        <div class="text-gray-400 font-medium bg-white/5 px-4 py-2 rounded-full border border-white/10 text-sm">
+          Total: <span class="text-white font-bold">{orders.length}</span> pedidos
         </div>
       </header>
 
+      <!-- Vista Mobile (Tarjetas) -->
+      <div class="grid gap-4 md:hidden mb-8">
+        {
+          orders.map((order) => {
+            const isPagado = order.pagado;
+            const isAbonado = order.abonado > 0 && !isPagado;
+            const porcentajeAbonado = Math.round((order.abonado / order.total) * 100);
+            const statusColor = isPagado ? 'text-green-500' : isAbonado ? 'text-blue-400' : 'text-orange-500';
+            const estilosArray = order.estilos ? order.estilos.split(', ') : [];
+
+            return (
+              <div class="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4 backdrop-blur-sm">
+                <div class="flex justify-between items-start">
+                  <div class="space-y-1">
+                    <h3 class="text-lg font-bold text-white leading-tight">{order.persona}</h3>
+                    <p class="text-gray-400 italic text-sm">"{order.nombre}"</p>
+                  </div>
+                  <div class={`text-xl font-black ${statusColor}`}>
+                    ${order.total}
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 py-3 border-y border-white/5">
+                  <div>
+                    <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Talla</span>
+                    <span class="text-white font-bold bg-white/10 px-2 py-1 rounded text-xs">{order.talla}</span>
+                  </div>
+                  <div>
+                    <span class="text-[10px] font-black text-gray-500 uppercase tracking-widest block mb-1">Estilos</span>
+                    <div class="flex flex-wrap gap-1">
+                      {estilosArray.length > 0 ? (
+                        estilosArray.map((estilo) => (
+                          <span class="px-1.5 py-0.5 rounded bg-white/10 text-[9px] font-bold text-gray-300 uppercase tracking-tight break-words max-w-full">
+                            {estilo}
+                          </span>
+                        ))
+                      ) : (
+                        <span class="text-gray-500 text-[10px] italic">-</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-2">
+                  <div class="w-full sm:w-auto">
+                    {isPagado ? (
+                      <span class="text-green-500 flex items-center gap-1.5 font-bold text-sm bg-green-500/10 px-3 py-1.5 rounded-full border border-green-500/20 w-fit">
+                        <CheckIcon /> Pagado
+                      </span>
+                    ) : isAbonado ? (
+                      <div class="flex flex-col gap-1">
+                        <span class="text-blue-400 flex items-center gap-1.5 font-bold text-sm bg-blue-400/10 px-3 py-1.5 rounded-full border border-blue-400/20 w-fit">
+                          <PaymentIcon class="w-4 h-4" badgeClass="w-3 h-3 text-[8px]" />
+                          Abonado (${order.abonado})
+                        </span>
+                        <span class="text-[10px] text-blue-400/60 font-bold uppercase tracking-tighter ml-2">
+                          {porcentajeAbonado}% del total
+                        </span>
+                      </div>
+                    ) : (
+                      <span class="text-orange-500 flex items-center gap-1.5 font-bold text-sm bg-orange-500/10 px-3 py-1.5 rounded-full border border-orange-500/20 w-fit">
+                        <ClockIcon /> Pendiente
+                      </span>
+                    )}
+                  </div>
+
+                  <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                    <form method="post" action="/api/pedidos/toggle">
+                      <input type="hidden" name="id" value={order.id} />
+                      <button
+                        type="submit"
+                        class={`inline-flex items-center justify-center w-11 h-11 rounded-xl border transition-all active:scale-95 ${order.pagado ? 'bg-white/5 border-white/10 text-white' : 'bg-green-500/10 border-green-500/20 text-green-400'}`}
+                        title={order.pagado ? 'Marcar como pendiente' : 'Marcar como pagado'}
+                      >
+                        {order.pagado ? <ClockIcon /> : <CheckIcon />}
+                      </button>
+                    </form>
+                    <button
+                      type="button"
+                      class="group inline-flex items-center justify-center w-11 h-11 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 transition-all active:scale-95"
+                      data-abono-id={order.id}
+                      data-abono-total={order.total}
+                      data-abono-actual={order.abonado}
+                      data-abono-persona={order.persona}
+                      title="Registrar abono"
+                    >
+                      <PaymentIcon class="w-6 h-6" badgeClass="w-4 h-4 text-[10px] group-hover:animate-bounce" />
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center w-11 h-11 rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-400 transition-all active:scale-95"
+                      data-edit-styles-id={order.id}
+                      data-edit-styles-persona={order.persona}
+                      data-edit-styles-current={order.estiloIds}
+                      title="Editar estilos"
+                    >
+                      <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      class="inline-flex items-center justify-center w-11 h-11 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 transition-all active:scale-95"
+                      data-delete-id={order.id}
+                      title="Eliminar pedido"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        }
+        {orders.length === 0 && <p class="text-center text-gray-500 italic py-10">No hay pedidos registrados.</p>}
+      </div>
+
+      <!-- Vista Desktop (Tabla) -->
       <div
-        class="bg-white/5 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-sm"
+        class="hidden md:block bg-white/5 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-sm shadow-2xl"
       >
         <table class="w-full text-left">
           <thead>
@@ -68,74 +211,129 @@ const orders = await db
           </thead>
           <tbody class="divide-y divide-white/10">
             {
-              orders.map((order) => (
-                <tr class="hover:bg-white/5 transition-colors">
-                  <td class="px-6 py-4 font-bold">{order.persona}</td>
-                  <td class="px-6 py-4 text-gray-400 italic">
-                    "{order.nombre}"
-                  </td>
-                  <td class="px-6 py-4 text-sm text-gray-300">{order.estilos || '-'}</td>
-                  <td class="px-6 py-4 font-bold">{order.talla}</td>
-                  <td class="px-6 py-4 font-bold text-orange-500">
-                    ${order.total}
-                  </td>
-                  <td class="px-6 py-4">
-                    {order.pagado ? (
-                      <span class="text-green-500 flex items-center gap-1 font-bold text-sm">
-                        <svg
-                          class="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M5 13l4 4L19 7" />
-                        </svg>{' '}
-                        Pagado
-                      </span>
-                    ) : (
-                      <span class="text-orange-500 flex items-center gap-1 font-bold text-sm">
-                        <svg
-                          class="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>{' '}
-                        Pendiente
-                      </span>
-                    )}
-                  </td>
-                  <td class="px-6 py-4">
-                    <div class="flex items-center gap-2">
-                      <form method="post" action="/api/pedidos/toggle">
-                        <input type="hidden" name="id" value={order.id} />
-                        <button
-                          type="submit"
-                          class={`inline-flex items-center justify-center w-9 h-9 rounded-full border transition-colors ${order.pagado ? 'bg-white/10 hover:bg-white/20 border-white/20 text-white' : 'bg-green-500/10 hover:bg-green-500/20 border-green-500/20 text-green-400'}`}
-                          title={order.pagado ? 'Marcar como pendiente' : 'Marcar como pagado'}
-                          aria-label={order.pagado ? 'Marcar como pendiente' : 'Marcar como pagado'}
-                        >
-                          {order.pagado ? (
-                            <ClockIcon />
+              orders.map((order) => {
+                const isPagado = order.pagado;
+                const isAbonado = order.abonado > 0 && !isPagado;
+                 const isPendiente = !isPagado && !isAbonado;
+                 const porcentajeAbonado = Math.round((order.abonado / order.total) * 100);
+                 const estilosArray = order.estilos ? order.estilos.split(', ') : [];
+                 
+                 const statusColor = isPagado 
+                   ? 'text-green-500' 
+                   : isAbonado 
+                     ? 'text-blue-400' 
+                     : 'text-orange-500';
+
+                 return (
+                   <tr class="hover:bg-white/5 transition-colors group">
+                     <td class="px-6 py-4 font-bold">{order.persona}</td>
+                     <td class="px-6 py-4 text-gray-400 italic">
+                       "{order.nombre}"
+                     </td>
+                     <td class="px-6 py-4">
+                        <div class="flex flex-wrap gap-1.5 max-w-[200px]">
+                          {estilosArray.length > 0 ? (
+                            estilosArray.map((estilo) => (
+                              <span class="px-2 py-0.5 rounded-md bg-white/5 border border-white/10 text-[10px] font-bold text-gray-300 uppercase tracking-tight break-words max-w-full group-hover:border-orange-500/30 transition-colors">
+                                {estilo}
+                              </span>
+                            ))
                           ) : (
-                            <CheckIcon />
+                            <span class="text-gray-500 text-xs italic">-</span>
                           )}
+                        </div>
+                     </td>
+                     <td class="px-6 py-4 font-bold">{order.talla}</td>
+                    <td class={`px-6 py-4 font-black ${statusColor}`}>
+                      ${order.total}
+                    </td>
+                    <td class="px-6 py-4">
+                      {isPagado ? (
+                        <span class="text-green-500 flex items-center gap-1 font-bold text-sm">
+                          <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M5 13l4 4L19 7" />
+                          </svg>
+                          Pagado
+                        </span>
+                      ) : isAbonado ? (
+                        <span class="text-blue-400 flex flex-col gap-0.5 font-bold text-sm">
+                          <div class="flex items-center gap-1">
+                            <PaymentIcon class="w-5 h-5" badgeClass="w-3 h-3 text-[8px]" />
+                            Abonado (${order.abonado})
+                          </div>
+                          <div class="text-[10px] ml-5 text-blue-400/70 uppercase tracking-tighter">
+                            {porcentajeAbonado}% del total
+                          </div>
+                        </span>
+                      ) : (
+                        <span class="text-orange-500 flex items-center gap-1 font-bold text-sm">
+                          <svg
+                            class="w-4 h-4"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Pendiente
+                        </span>
+                      )}
+                    </td>
+                    <td class="px-6 py-4">
+                      <div class="flex items-center gap-2">
+                        <form method="post" action="/api/pedidos/toggle">
+                          <input type="hidden" name="id" value={order.id} />
+                          <button
+                            type="submit"
+                            class={`inline-flex items-center justify-center w-9 h-9 rounded-full border transition-colors ${order.pagado ? 'bg-white/10 hover:bg-white/20 border-white/20 text-white' : 'bg-green-500/10 hover:bg-green-500/20 border-green-500/20 text-green-400'}`}
+                            title={order.pagado ? 'Marcar como pendiente' : 'Marcar como pagado'}
+                            aria-label={order.pagado ? 'Marcar como pendiente' : 'Marcar como pagado'}
+                          >
+                            {order.pagado ? <ClockIcon /> : <CheckIcon />}
+                          </button>
+                        </form>
+                        <button
+                          type="button"
+                          class="group inline-flex items-center justify-center w-10 h-10 rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-all duration-300 hover:scale-110 active:scale-95"
+                          title="Registrar abono"
+                          data-abono-id={order.id}
+                          data-abono-total={order.total}
+                          data-abono-actual={order.abonado}
+                          data-abono-persona={order.persona}
+                        >
+                          <PaymentIcon badgeClass="w-4 h-4 text-[10px] group-hover:animate-bounce" />
                         </button>
-                      </form>
-                      <button
-                        type="button"
-                        class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
-                        title="Borrar pedido"
-                        aria-label="Borrar pedido"
-                        data-delete-id={order.id}
-                      >
-                        <TrashIcon />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+                        <button
+                          type="button"
+                          class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 transition-all duration-300 hover:scale-110 active:scale-95"
+                          data-edit-styles-id={order.id}
+                          data-edit-styles-persona={order.persona}
+                          data-edit-styles-current={order.estiloIds}
+                          title="Editar estilos"
+                        >
+                          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                          title="Borrar pedido"
+                          aria-label="Borrar pedido"
+                          data-delete-id={order.id}
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             }
             {
               orders.length === 0 && (
@@ -157,20 +355,25 @@ const orders = await db
 
   <div
     id="delete-modal"
-    class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60"
+    class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60 px-4"
   >
     <div
-      class="bg-[#151515] border border-white/10 rounded-xl p-6 w-full max-w-md shadow-2xl"
+      class="bg-[#151515] border border-white/10 rounded-2xl p-6 w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200"
     >
-      <h4 class="text-lg font-bold mb-2">Eliminar pedido</h4>
-      <p class="text-gray-400 mb-6">
-        ¿Seguro que quieres eliminar este pedido? Esta acción no se puede deshacer.
+      <div class="flex items-center gap-3 mb-4 text-red-500">
+        <div class="w-10 h-10 rounded-full bg-red-500/10 flex items-center justify-center">
+          <TrashIcon />
+        </div>
+        <h4 class="text-xl font-bold">Eliminar pedido</h4>
+      </div>
+      <p class="text-gray-400 mb-8 text-sm leading-relaxed">
+        ¿Estás seguro de que quieres eliminar este pedido? Esta acción es irreversible y se perderán todos los datos asociados.
       </p>
-      <div class="flex justify-end gap-3">
+      <div class="grid grid-cols-2 gap-3">
         <button
           type="button"
           id="delete-cancel"
-          class="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white"
+          class="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-colors"
         >
           Cancelar
         </button>
@@ -178,7 +381,7 @@ const orders = await db
           <input type="hidden" name="id" id="delete-id" />
           <button
             type="submit"
-            class="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white font-bold"
+            class="w-full px-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg shadow-red-600/20 transition-all active:scale-95"
           >
             Eliminar
           </button>
@@ -187,23 +390,210 @@ const orders = await db
     </div>
   </div>
 
+  <!-- Modal de Abono -->
+  <div
+    id="abono-modal"
+    class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60 px-4"
+  >
+    <div
+      class="bg-[#151515] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-200"
+    >
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-blue-600/20 flex items-center justify-center text-blue-400 shadow-inner">
+          <PaymentIcon class="w-8 h-8" badgeClass="w-5 h-5 text-xs animate-pulse" />
+        </div>
+        <div>
+          <h4 class="text-2xl font-black text-white">Registrar Pago</h4>
+          <p id="abono-subtitle" class="text-blue-400 font-bold tracking-widest text-xs uppercase"></p>
+        </div>
+      </div>
+      
+      <form method="post" action="/api/pedidos/abono" id="abono-form" class="space-y-4">
+        <input type="hidden" name="id" id="abono-id" />
+        
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-gray-400 uppercase ml-1">Monto del Abono ($)</label>
+          <input 
+            type="number" 
+            name="monto" 
+            id="abono-monto" 
+            step="0.01"
+            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-blue-500 outline-none text-lg font-bold text-white"
+            required
+          />
+          <p id="abono-total-hint" class="text-xs text-gray-500 mt-1 ml-1"></p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button
+            type="button"
+            id="abono-cancel"
+            class="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-600/20 transition-all active:scale-95"
+          >
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal de Editar Estilos -->
+  <div
+    id="edit-styles-modal"
+    class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60 px-4"
+  >
+    <div
+      class="bg-[#151515] border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200"
+    >
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-orange-600/20 flex items-center justify-center text-orange-400 shadow-inner">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </div>
+        <div>
+          <h4 class="text-2xl font-black text-white">Editar Estilos</h4>
+          <p id="edit-styles-subtitle" class="text-orange-400 font-bold tracking-widest text-xs uppercase"></p>
+        </div>
+      </div>
+      
+      <form method="post" action="/api/pedidos/update-styles" id="edit-styles-form" class="space-y-4">
+        <input type="hidden" name="id" id="edit-styles-id" />
+        
+        <div class="space-y-3">
+          <label class="text-xs font-bold text-gray-400 uppercase ml-1">Seleccionar Estilos</label>
+          <div class="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+            {collectionNumbers.map((num) => (
+              <div class="space-y-3">
+                <div class="flex items-center gap-3">
+                  <span class="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em]">Colección #{num}</span>
+                  <div class="h-px bg-white/10 flex-1"></div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {groupedStyles[num].map((estilo) => (
+                    <label class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors group">
+                      <input 
+                        type="checkbox" 
+                        name="estilos" 
+                        value={estilo.id} 
+                        class="w-5 h-5 rounded border-white/20 bg-black/40 text-orange-500 focus:ring-orange-500 focus:ring-offset-0 transition-all"
+                      />
+                      <div class="flex flex-col">
+                        <span class="text-sm font-bold text-white group-hover:text-orange-400 transition-colors">{estilo.nombre}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-4">
+          <button
+            type="button"
+            id="edit-styles-cancel"
+            class="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg shadow-orange-600/20 transition-all active:scale-95"
+          >
+            Guardar Cambios
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     const modal = document.getElementById('delete-modal');
     const deleteIdInput = document.getElementById('delete-id');
     const cancelBtn = document.getElementById('delete-cancel');
 
+    // Abono Elements
+    const abonoModal = document.getElementById('abono-modal');
+    const abonoIdInput = document.getElementById('abono-id') as HTMLInputElement;
+    const abonoMontoInput = document.getElementById('abono-monto') as HTMLInputElement;
+    const abonoSubtitle = document.getElementById('abono-subtitle');
+    const abonoTotalHint = document.getElementById('abono-total-hint');
+    const abonoCancelBtn = document.getElementById('abono-cancel');
+
+    // Edit Styles Elements
+    const editStylesModal = document.getElementById('edit-styles-modal');
+    const editStylesIdInput = document.getElementById('edit-styles-id') as HTMLInputElement;
+    const editStylesSubtitle = document.getElementById('edit-styles-subtitle');
+    const editStylesCancelBtn = document.getElementById('edit-styles-cancel');
+    const editStylesForm = document.getElementById('edit-styles-form') as HTMLFormElement;
+
     document.addEventListener('click', (ev) => {
       const target = ev.target as HTMLElement | null;
       if (!target) return;
-      const button = target.closest('[data-delete-id]') as HTMLElement | null;
-      if (!button) return;
+      
+      // Delete Modal Logic
+      const deleteButton = target.closest('[data-delete-id]') as HTMLElement | null;
+      if (deleteButton) {
+        const id = deleteButton.getAttribute('data-delete-id');
+        if (!id || !modal || !deleteIdInput) return;
+        deleteIdInput.setAttribute('value', id);
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        return;
+      }
 
-      const id = button.getAttribute('data-delete-id');
-      if (!id || !modal || !deleteIdInput) return;
+      // Abono Modal Logic
+      const abonoButton = target.closest('[data-abono-id]') as HTMLElement | null;
+      if (abonoButton) {
+        const id = abonoButton.getAttribute('data-abono-id');
+        const total = parseFloat(abonoButton.getAttribute('data-abono-total') || '0');
+        const actual = parseFloat(abonoButton.getAttribute('data-abono-actual') || '0');
+        const persona = abonoButton.getAttribute('data-abono-persona');
 
-      deleteIdInput.setAttribute('value', id);
-      modal.classList.remove('hidden');
-      modal.classList.add('flex');
+        if (!id || !abonoModal || !abonoIdInput || !abonoMontoInput) return;
+
+        abonoIdInput.value = id;
+        // Lógica del 50%: si no hay abono, sugerir el 50%. Si ya hay, mostrar el actual.
+        const sugerido = actual > 0 ? actual : (total / 2);
+        abonoMontoInput.value = sugerido.toFixed(2);
+        
+        if (abonoSubtitle) abonoSubtitle.textContent = persona;
+        if (abonoTotalHint) abonoTotalHint.textContent = `Total del pedido: ${total.toFixed(2)}`;
+
+        abonoModal.classList.remove('hidden');
+        abonoModal.classList.add('flex');
+        return;
+      }
+
+      // Edit Styles Modal Logic
+      const editStylesButton = target.closest('[data-edit-styles-id]') as HTMLElement | null;
+      if (editStylesButton) {
+        const id = editStylesButton.getAttribute('data-edit-styles-id');
+        const persona = editStylesButton.getAttribute('data-edit-styles-persona');
+        const currentIds = editStylesButton.getAttribute('data-edit-styles-current')?.split(',') || [];
+
+        if (!id || !editStylesModal || !editStylesIdInput || !editStylesForm) return;
+
+        editStylesIdInput.value = id;
+        if (editStylesSubtitle) editStylesSubtitle.textContent = persona;
+
+        // Reset and Set Checkboxes
+        const checkboxes = editStylesForm.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
+        checkboxes.forEach(cb => {
+          cb.checked = currentIds.includes(cb.value);
+        });
+
+        editStylesModal.classList.remove('hidden');
+        editStylesModal.classList.add('flex');
+        return;
+      }
     });
 
     cancelBtn?.addEventListener('click', () => {
@@ -212,12 +602,24 @@ const orders = await db
       deleteIdInput?.setAttribute('value', '');
     });
 
-    modal?.addEventListener('click', (ev) => {
-      if (ev.target === modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-        deleteIdInput?.setAttribute('value', '');
-      }
+    abonoCancelBtn?.addEventListener('click', () => {
+      abonoModal?.classList.add('hidden');
+      abonoModal?.classList.remove('flex');
+    });
+
+    editStylesCancelBtn?.addEventListener('click', () => {
+      editStylesModal?.classList.add('hidden');
+      editStylesModal?.classList.remove('flex');
+    });
+
+    // Close on backdrop click
+    [modal, abonoModal, editStylesModal].forEach(m => {
+      m?.addEventListener('click', (ev) => {
+        if (ev.target === m) {
+          m.classList.add('hidden');
+          m.classList.remove('flex');
+        }
+      });
     });
   </script>
 </Layout>

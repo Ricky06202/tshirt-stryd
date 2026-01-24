@@ -37,19 +37,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const total = estilos.reduce((acc, e) => acc + (e.precio as number), 0)
 
-    await db.insert(pedidosTable).values({
+    const result = await db.insert(pedidosTable).values({
       persona,
       nombre: nombre || 'Sin nombre',
       tallaId,
       total,
       pagado: 0,
-    })
+    }).returning({ insertedId: pedidosTable.id })
 
-    // Obtener el último id insertado mediante MAX(id)
-    const [{ maxId }] = await db
-      .select({ maxId: sql<number>`max(${pedidosTable.id})` })
-      .from(pedidosTable)
-    const pedidoId = maxId as number
+    const pedidoId = result[0].insertedId
 
     // Insertar los items del pedido
     await db.insert(pedidoItemsTable).values(

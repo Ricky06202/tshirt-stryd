@@ -362,24 +362,26 @@ const OrderForm: React.FC<OrderFormProps> = ({ tallas, estilos }) => {
                           alt={style.nombre}
                           className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-110 opacity-80"
                         />
-                        <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-orange-500 font-bold">
+                      </div>
+                      <div className="p-4 flex justify-between items-start gap-2">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg">{style.nombre}</h3>
+                          {selectedStyles.some((s) => s.id === style.id) && (
+                            <div className="mt-2 flex items-center gap-2 text-orange-500 text-sm font-bold">
+                              <svg
+                                className="w-4 h-4"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
+                              </svg>
+                              Seleccionado
+                            </div>
+                          )}
+                        </div>
+                        <div className="bg-white/10 px-3 py-1 rounded-full text-orange-500 font-bold shrink-0">
                           ${style.precio}
                         </div>
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-bold text-lg">{style.nombre}</h3>
-                        {selectedStyles.some((s) => s.id === style.id) && (
-                          <div className="mt-2 flex items-center gap-2 text-orange-500 text-sm font-bold">
-                            <svg
-                              className="w-4 h-4"
-                              fill="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"></path>
-                            </svg>
-                            Seleccionado
-                          </div>
-                        )}
                       </div>
                     </div>
                   ))}
