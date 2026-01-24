@@ -34,10 +34,20 @@ const StylesManager: React.FC = () => {
   }, [])
 
   const fetchStyles = async () => {
-    const res = await fetch('/api/admin/estilos')
-    const data = (await res.json()) as Estilo[]
-    setStyles(data)
-    setLoading(false)
+    try {
+      const res = await fetch('/api/admin/estilos')
+      if (!res.ok) {
+        throw new Error(`Error ${res.status}: No se pudieron cargar los estilos`)
+      }
+      const data = (await res.json()) as Estilo[]
+      setStyles(data)
+    } catch (e) {
+      console.error('Error fetching styles:', e)
+      setErrorMessage('Error al cargar los estilos. Asegúrate de estar autenticado.')
+      setErrorOpen(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const styleGroups = useMemo(() => {

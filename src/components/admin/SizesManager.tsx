@@ -24,10 +24,20 @@ const SizesManager: React.FC = () => {
   }, [])
 
   const fetchSizes = async () => {
-    const res = await fetch('/api/admin/tallas')
-    const data = (await res.json()) as Talla[]
-    setSizes(data)
-    setLoading(false)
+    try {
+      const res = await fetch('/api/admin/tallas')
+      if (!res.ok) {
+        throw new Error(`Error ${res.status}: No se pudieron cargar las tallas`)
+      }
+      const data = (await res.json()) as Talla[]
+      setSizes(data)
+    } catch (e) {
+      console.error('Error fetching sizes:', e)
+      setErrorMessage('Error al cargar las tallas. Asegúrate de estar autenticado.')
+      setErrorOpen(true)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const openConfirmDelete = (id: number) => {
