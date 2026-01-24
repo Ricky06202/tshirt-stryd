@@ -22,8 +22,11 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     // VALIDACIÓN DE CLOUDFLARE TURNSTILE
-    const SECRET_KEY = locals.runtime.env.TURNSTILE_SECRET_KEY || '1x0000000000000000000000000000000AA'; // Llave de prueba por defecto
+    const isLocal = request.url.includes('localhost') || request.url.includes('127.0.0.1');
+    const SECRET_KEY = locals.runtime.env.TURNSTILE_SECRET_KEY || '1x0000000000000000000000000000000AA';
     
+    // Si estamos en local y no hay llave real, podemos saltarnos la validación de red
+    // o usar la llave de prueba universal de Cloudflare.
     const verifyResponse = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
