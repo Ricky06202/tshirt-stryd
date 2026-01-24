@@ -17,9 +17,10 @@ interface Estilo {
 interface OrderFormProps {
   tallas: Talla[]
   estilos: Estilo[]
+  turnstileSiteKey?: string
 }
 
-const OrderForm: React.FC<OrderFormProps> = ({ tallas, estilos }) => {
+const OrderForm: React.FC<OrderFormProps> = ({ tallas, estilos, turnstileSiteKey }) => {
   const [step, setStep] = useState(1)
   const [persona, setPersona] = useState('')
   const [nombreCamisa, setNombreCamisa] = useState('')
@@ -66,10 +67,8 @@ const OrderForm: React.FC<OrderFormProps> = ({ tallas, estilos }) => {
   useEffect(() => {
     if (selectedStyles.length > 0 && selectedSize && persona && turnstileRef.current) {
       const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      // Si es local, forzamos la llave de prueba que no valida dominio
-      const siteKey = isLocal 
-        ? '1x00000000000000000000AA' 
-        : (import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA');
+      // Prioridad: 1. Llave real de la prop, 2. Llave de prueba si es local, 3. Llave de prueba universal
+      const siteKey = turnstileSiteKey || (isLocal ? '1x00000000000000000000AA' : '1x00000000000000000000AA');
 
       // @ts-ignore
       if (window.turnstile) {

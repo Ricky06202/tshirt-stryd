@@ -9,6 +9,9 @@ const db = getDB(Astro.locals.runtime.env)
 // Obtenemos tallas y estilos directamente desde D1 para pasarlos al componente
 const tallas = await db.select().from(tallasTable)
 const estilos = await db.select().from(estilosTable)
+
+// Obtenemos la llave pública del runtime de Cloudflare
+const turnstileSiteKey = Astro.locals.runtime.env.PUBLIC_TURNSTILE_SITE_KEY;
 ---
 
 <Layout>
@@ -43,7 +46,12 @@ const estilos = await db.select().from(estilosTable)
         </p>
       </div>
 
-      <OrderForm client:load tallas={tallas} estilos={estilos} />
+      <OrderForm 
+        client:load 
+        tallas={tallas} 
+        estilos={estilos} 
+        turnstileSiteKey={turnstileSiteKey}
+      />
     </div>
   </main>
 </Layout>
