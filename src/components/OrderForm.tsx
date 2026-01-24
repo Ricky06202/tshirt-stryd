@@ -60,8 +60,36 @@ const OrderForm: React.FC<OrderFormProps> = ({ tallas, estilos }) => {
     [selectedStyles],
   )
 
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
+  const turnstileRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (selectedStyles.length > 0 && selectedSize && persona && turnstileRef.current) {
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      // Si es local, forzamos la llave de prueba que no valida dominio
+      const siteKey = isLocal 
+        ? '1x00000000000000000000AA' 
+        : (import.meta.env.PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA');
+
+      // @ts-ignore
+      if (window.turnstile) {
+        // @ts-ignore
+        window.turnstile.render(turnstileRef.current, {
+          sitekey: siteKey,
+          callback: (token: string) => {
+            setTurnstileToken(token)
+          },
+        })
+      }
+    }
+  }, [selectedStyles.length, selectedSize, persona])
+
   const handleSubmit = async () => {
     if (!persona || selectedStyles.length === 0 || !selectedSize) return
+    if (!turnstileToken) {
+      setError('Por favor completa la verificación de seguridad')
+      return
+    }
 
     setIsSubmitting(true)
     setError('')
@@ -75,6 +103,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ tallas, estilos }) => {
           nombre: nombreCamisa || 'Sín nombre',
           estiloIds: selectedStyles.map((s) => s.id),
           tallaId: selectedSize.id,
+          turnstileToken,
         }),
       })
 
@@ -430,6 +459,11 @@ const OrderForm: React.FC<OrderFormProps> = ({ tallas, estilos }) => {
               <div className="text-3xl font-bold mb-4 text-white">
                 ${totalSeleccionado}
               </div>
+              
+              <div className="flex justify-center md:justify-end mb-4">
+                <div ref={turnstileRef}></div>
+              </div>
+
               <button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
