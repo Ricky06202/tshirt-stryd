@@ -54,7 +54,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ tallas, estilos, turnstileSiteKey
     return groups
   }, [estilos])
 
-  const groupedNumbers = Object.keys(styleGroups).map(Number)
+  const groupedNumbers = Object.keys(styleGroups).map(Number).sort((a, b) => b - a)
 
   const totalSeleccionado = useMemo(
     () => selectedStyles.reduce((acc, s) => acc + s.precio, 0),

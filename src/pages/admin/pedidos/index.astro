@@ -23,7 +23,7 @@ const groupedStyles = allStyles.reduce((acc, estilo) => {
   return acc
 }, {} as Record<number, typeof allStyles>)
 
-const collectionNumbers = Object.keys(groupedStyles).map(Number).sort((a, b) => a - b)
+const collectionNumbers = Object.keys(groupedStyles).map(Number).sort((a, b) => b - a)
 
 // Fetch orders with aggregated styles and size info
 const orders = await db

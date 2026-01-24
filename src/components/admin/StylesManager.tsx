@@ -60,7 +60,7 @@ const StylesManager: React.FC = () => {
   }, [styles])
 
   const groupedNumbers = Object.keys(styleGroups)
-    .sort((a, b) => Number(a) - Number(b))
+    .sort((a, b) => Number(b) - Number(a))
     .map(Number)
 
   const openConfirmDelete = (id: number) => {
