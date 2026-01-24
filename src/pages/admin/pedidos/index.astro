@@ -1,5 +1,6 @@
 ---
 import Layout from '../../../layouts/Layout.astro'
+import UserBadge from '../../../components/admin/UserBadge.astro'
 import { getDB } from '../../../db'
 import { pedidosTable, estilosTable, tallasTable, pedidoItemsTable } from '../../../db/schema'
 import { eq, sql } from 'drizzle-orm'
@@ -9,7 +10,6 @@ import TrashIcon from '../../../components/icons/TrashIcon.astro'
 import PaymentIcon from '../../../components/icons/PaymentIcon.astro'
 
 const db = getDB(Astro.locals.runtime.env)
-const { user } = Astro.locals;
 
 // Fetch all available styles for the edit modal
 const allStyles = await db
@@ -76,17 +76,7 @@ const orders = await db
           <div class="text-gray-400 font-medium bg-white/5 px-4 py-2 rounded-full border border-white/10 text-sm">
             Total: <span class="text-white font-bold">{orders.length}</span> pedidos
           </div>
-          {user && (
-            <a 
-              href="/cdn-cgi/access/logout" 
-              class="p-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-all duration-300 group"
-              title="Cerrar sesión"
-            >
-              <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-            </a>
-          )}
+          <UserBadge />
         </div>
       </header>
 

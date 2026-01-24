@@ -1,31 +1,50 @@
 import { defineMiddleware } from "astro:middleware";
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  const { pathname } = context.url;
+  const { pathname, hostname } = context.url;
 
-  // Protegemos todas las rutas que empiecen con /admin o sean APIs de admin
-  if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin")) {
-    // Cloudflare Access inyecta estas cabeceras tras una autenticación exitosa
+  // Detectamos si estamos en entorno local
+  const isLocal = hostname === "localhost" || 
+                 hostname === "127.0.0.1" || 
+                 hostname.endsWith(".local");
+
+  // Definimos qué rutas requieren autenticación
+  const isAdminPath = pathname.startsWith("/admin");
+  const isAdminApi = pathname.startsWith("/api/") && 
+                    !pathname.startsWith("/api/order") && 
+                    !pathname.startsWith("/api/images");
+
+  if (isAdminPath || isAdminApi) {
+    // BYPASS TOTAL EN LOCAL: Si estamos en localhost, inyectamos usuario dummy y seguimos
+    if (isLocal) {
+      context.locals.user = { 
+        email: "admin@local.dev",
+        name: "Admin Local"
+      };
+      return next();
+    }
+
+    // LÓGICA DE PRODUCCIÓN (CLOUDFLARE ACCESS)
     const userEmail = context.request.headers.get("Cf-Access-Authenticated-User-Email");
     const userName = context.request.headers.get("Cf-Access-Authenticated-User-Name");
 
     if (userEmail) {
       context.locals.user = { 
         email: userEmail,
-        name: userName || userEmail.split('@')[0] // Fallback al nombre de usuario del email si no hay nombre real
+        name: userName || userEmail.split('@')[0]
       };
     } else {
-      // Si estamos en producción y no hay cabecera, es un acceso no autorizado
-      // En desarrollo (localhost), permitimos el paso para no bloquear el trabajo
-      if (context.url.hostname !== "localhost" && context.url.hostname !== "127.0.0.1") {
-        return new Response("No autorizado: Cloudflare Access es requerido", { status: 401 });
+      // Bloqueo en producción si no hay cabeceras de Cloudflare
+      if (isAdminApi) {
+        return new Response(
+          JSON.stringify({ 
+            error: "No autorizado", 
+            message: "Cloudflare Access es requerido." 
+          }), 
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        );
       }
-      
-      // Usuario dummy para desarrollo
-      context.locals.user = { 
-        email: "admin@local.dev",
-        name: "Administrador Local"
-      };
+      return new Response("No autorizado: Cloudflare Access es requerido", { status: 401 });
     }
   }
 
