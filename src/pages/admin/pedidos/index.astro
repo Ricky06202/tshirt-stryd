@@ -151,7 +151,7 @@ const orders = await db
                       <input type="hidden" name="id" value={order.id} />
                       <button
                         type="submit"
-                        class={`inline-flex items-center justify-center w-11 h-11 rounded-xl border transition-all active:scale-95 ${order.pagado ? 'bg-white/5 border-white/10 text-white' : 'bg-green-500/10 border-green-500/20 text-green-400'}`}
+                        class={`inline-flex items-center justify-center w-11 h-11 rounded-xl border transition-all active:scale-95 cursor-pointer ${order.pagado ? 'bg-white/5 border-white/10 text-white' : 'bg-green-500/10 border-green-500/20 text-green-400'}`}
                         title={order.pagado ? 'Marcar como pendiente' : 'Marcar como pagado'}
                       >
                         {order.pagado ? <ClockIcon /> : <CheckIcon />}
@@ -159,7 +159,7 @@ const orders = await db
                     </form>
                     <button
                       type="button"
-                      class="group inline-flex items-center justify-center w-11 h-11 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 transition-all active:scale-95"
+                      class="group inline-flex items-center justify-center w-11 h-11 rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-400 transition-all active:scale-95 cursor-pointer"
                       data-abono-id={order.id}
                       data-abono-total={order.total}
                       data-abono-actual={order.abonado}
@@ -170,7 +170,7 @@ const orders = await db
                     </button>
                     <button
                       type="button"
-                      class="inline-flex items-center justify-center w-11 h-11 rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-400 transition-all active:scale-95"
+                      class="inline-flex items-center justify-center w-11 h-11 rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-400 transition-all active:scale-95 cursor-pointer"
                       data-edit-styles-id={order.id}
                       data-edit-styles-persona={order.persona}
                       data-edit-styles-current={order.estiloIds}
@@ -182,7 +182,7 @@ const orders = await db
                     </button>
                     <button
                       type="button"
-                      class="inline-flex items-center justify-center w-11 h-11 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 transition-all active:scale-95"
+                      class="inline-flex items-center justify-center w-11 h-11 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 transition-all active:scale-95 cursor-pointer"
                       data-delete-id={order.id}
                       title="Eliminar pedido"
                     >
@@ -294,7 +294,7 @@ const orders = await db
                           <input type="hidden" name="id" value={order.id} />
                           <button
                             type="submit"
-                            class={`inline-flex items-center justify-center w-9 h-9 rounded-full border transition-colors ${order.pagado ? 'bg-white/10 hover:bg-white/20 border-white/20 text-white' : 'bg-green-500/10 hover:bg-green-500/20 border-green-500/20 text-green-400'}`}
+                            class={`inline-flex items-center justify-center w-9 h-9 rounded-full border transition-colors cursor-pointer ${order.pagado ? 'bg-white/10 hover:bg-white/20 border-white/20 text-white' : 'bg-green-500/10 hover:bg-green-500/20 border-green-500/20 text-green-400'}`}
                             title={order.pagado ? 'Marcar como pendiente' : 'Marcar como pagado'}
                             aria-label={order.pagado ? 'Marcar como pendiente' : 'Marcar como pagado'}
                           >
@@ -303,7 +303,7 @@ const orders = await db
                         </form>
                         <button
                           type="button"
-                          class="group inline-flex items-center justify-center w-10 h-10 rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-all duration-300 hover:scale-110 active:scale-95"
+                          class="group inline-flex items-center justify-center w-10 h-10 rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
                           title="Registrar abono"
                           data-abono-id={order.id}
                           data-abono-total={order.total}
@@ -314,7 +314,7 @@ const orders = await db
                         </button>
                         <button
                           type="button"
-                          class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 transition-all duration-300 hover:scale-110 active:scale-95"
+                          class="inline-flex items-center justify-center w-10 h-10 rounded-xl border border-orange-500/30 bg-orange-500/10 hover:bg-orange-500/20 text-orange-400 transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
                           data-edit-styles-id={order.id}
                           data-edit-styles-persona={order.persona}
                           data-edit-styles-current={order.estiloIds}
@@ -326,7 +326,7 @@ const orders = await db
                         </button>
                         <button
                           type="button"
-                          class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors"
+                          class="inline-flex items-center justify-center w-9 h-9 rounded-full border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-400 transition-colors cursor-pointer"
                           title="Borrar pedido"
                           aria-label="Borrar pedido"
                           data-delete-id={order.id}
