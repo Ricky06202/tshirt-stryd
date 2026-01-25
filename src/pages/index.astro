@@ -1,13 +1,55 @@
 ---
 import Layout from '../layouts/Layout.astro'
+import HeroCarousel from '../components/HeroCarousel'
+import { getDB } from '../db'
+import { estilosTable } from '../db/schema'
+import { sql } from 'drizzle-orm'
+
+const db = getDB(Astro.locals.runtime.env)
+
+// Obtener todos los estilos agrupados por categoría para poder mezclarlos equitativamente
+const allStyles = await db
+  .select({
+    id: estilosTable.id,
+    nombre: estilosTable.nombre,
+    imagen: estilosTable.imagen,
+    estilo: estilosTable.estilo,
+  })
+  .from(estilosTable)
+
+// Agrupar por categoría
+const stylesByCategory: Record<number, any[]> = {}
+allStyles.forEach(s => {
+  if (!stylesByCategory[s.estilo]) stylesByCategory[s.estilo] = []
+  stylesByCategory[s.estilo].push(s)
+})
+
+// Mezclar categorías y sacar uno de cada una de forma rotativa
+const categories = Object.keys(stylesByCategory).map(Number).sort((a, b) => b - a)
+const representativeStyles = []
+let maxPerCategory = 2 // Intentamos sacar hasta 2 de cada categoría si hay suficientes
+let addedCount = 0
+
+for (let i = 0; i < maxPerCategory; i++) {
+  categories.forEach(cat => {
+    if (stylesByCategory[cat][i]) {
+      representativeStyles.push(stylesByCategory[cat][i])
+    }
+  })
+}
+
+// Si tenemos pocos estilos, mezclamos el resultado final aleatoriamente
+representativeStyles.sort(() => Math.random() - 0.5)
 ---
 
 <Layout>
   <main
-    class="min-h-screen flex flex-col items-center justify-center p-6 text-center"
+    class="min-h-screen flex flex-col items-center justify-center p-6 text-center relative overflow-hidden"
   >
+    <HeroCarousel client:load styles={representativeStyles} />
+    
     <div
-      class="max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000"
+      class="max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 z-30"
     >
       <div
         class="inline-block px-4 py-1.5 mb-4 text-sm font-semibold tracking-wider text-orange-500 uppercase bg-orange-500/10 rounded-full border border-orange-500/20"
