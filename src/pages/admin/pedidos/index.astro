@@ -182,7 +182,7 @@ const orders = await db
                     )}
                   </div>
 
-                  <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                  <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto justify-end">
                     <form method="post" action="/api/pedidos/toggle">
                       <input type="hidden" name="id" value={order.id} />
                       <button
@@ -354,7 +354,7 @@ const orders = await db
                       )}
                     </td>
                     <td class="px-6 py-4">
-                      <div class="flex items-center gap-2">
+                      <div class="flex flex-wrap items-center gap-2 max-w-[160px]">
                         <form method="post" action="/api/pedidos/toggle">
                           <input type="hidden" name="id" value={order.id} />
                           <button
@@ -746,7 +746,8 @@ const orders = await db
     // Report Modal Logic
     reportOpenBtn?.addEventListener('click', () => {
       console.log('Opening report modal');
-      const today = new Date().toISOString().split('T')[0];
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       if (reportFromInput) reportFromInput.value = today;
       if (reportToInput) reportToInput.value = today;
       
@@ -853,13 +854,18 @@ const orders = await db
       if (!from || !to || !ordersData) return;
 
       const orders = JSON.parse(ordersData);
-      const fromDate = new Date(from);
-      fromDate.setHours(0, 0, 0, 0);
-      const toDate = new Date(to);
-      toDate.setHours(23, 59, 59, 999);
+      
+      // Parse dates using local time components to avoid timezone shifts
+      const [fYear, fMonth, fDay] = from.split('-').map(Number);
+      const fromDate = new Date(fYear, fMonth - 1, fDay, 0, 0, 0, 0);
+      
+      const [tYear, tMonth, tDay] = to.split('-').map(Number);
+      const toDate = new Date(tYear, tMonth - 1, tDay, 23, 59, 59, 999);
 
       const filteredOrders = orders.filter((order: any) => {
         if (!order.createdAt) return false;
+        // order.createdAt is usually a string like "2026-01-29 21:30:00"
+        // new Date(string) usually parses as local if it has time, or UTC if it's just YYYY-MM-DD
         const orderDate = new Date(order.createdAt);
         return orderDate >= fromDate && orderDate <= toDate;
       });
@@ -871,6 +877,12 @@ const orders = await db
 
       const doc = new jsPDF();
       
+      // Helper to format YYYY-MM-DD to DD/MM/YYYY
+      const displayDate = (dateStr: string) => {
+        const [y, m, d] = dateStr.split('-');
+        return `${d}/${m}/${y}`;
+      };
+
       // Header
       doc.setFontSize(20);
       doc.setTextColor(0, 0, 0);
@@ -878,13 +890,14 @@ const orders = await db
       
       doc.setFontSize(10);
       doc.setTextColor(100);
-      doc.text(`Desde: ${from} Hasta: ${to}`, 14, 28);
+      doc.text(`Desde: ${displayDate(from)} Hasta: ${displayDate(to)}`, 14, 28);
       doc.text(`Generado el: ${new Date().toLocaleString()}`, 14, 33);
 
       const tableData = filteredOrders.map((order: any) => [
         order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '---',
         order.persona,
         order.nombre,
+        order.estilos || '---',
         order.talla,
         `$${order.total}`,
         order.pagado ? 'PAGADO' : (order.abonado > 0 ? `ABONADO ($${order.abonado})` : 'PENDIENTE')
@@ -892,10 +905,14 @@ const orders = await db
 
       autoTable(doc, {
         startY: 40,
-        head: [['Fecha', 'Cliente', 'Nombre Camisa', 'Talla', 'Total', 'Estado']],
+        head: [['Fecha', 'Cliente', 'Nombre Camisa', 'Estilos', 'Talla', 'Total', 'Estado']],
         body: tableData,
         headStyles: { fillColor: [21, 21, 21], textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [245, 245, 245] },
+        styles: { fontSize: 8, cellPadding: 2 },
+        columnStyles: {
+          3: { cellWidth: 40 } // Give more space to "Estilos" column
+        },
         margin: { top: 40 },
       });
 
