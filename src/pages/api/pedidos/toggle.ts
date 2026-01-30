@@ -20,7 +20,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const db = getDB(locals.runtime.env)
 
     const rows = await db
-      .select({ pagado: pedidosTable.pagado })
+      .select({ 
+        pagado: pedidosTable.pagado,
+        total: pedidosTable.total 
+      })
       .from(pedidosTable)
       .where(eq(pedidosTable.id, id))
 
@@ -28,12 +31,20 @@ export const POST: APIRoute = async ({ request, locals }) => {
       return new Response(JSON.stringify({ error: 'Pedido no encontrado' }), { status: 404 })
     }
 
-    const current = rows[0].pagado as number
+    const { pagado: current, total } = rows[0]
     const next = current ? 0 : 1
+
+    // Al marcar como pagado (next === 1), igualamos el abonado al total.
+    // Al marcar como pendiente (next === 0), dejamos el abonado como estaba o decidimos si resetearlo.
+    // Según el feedback, el problema es que al marcar como pagado no se suma en el informe porque abonado queda en 0.
+    const updateData: any = { pagado: next }
+    if (next === 1) {
+      updateData.abonado = total
+    }
 
     await db
       .update(pedidosTable)
-      .set({ pagado: next })
+      .set(updateData)
       .where(eq(pedidosTable.id, id))
 
     // Redirigir de vuelta a la lista

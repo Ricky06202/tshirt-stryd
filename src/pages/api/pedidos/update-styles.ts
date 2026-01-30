@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro'
 import { getDB } from '../../../db'
-import { pedidoItemsTable } from '../../../db/schema'
-import { eq } from 'drizzle-orm'
+import { pedidoItemsTable, pedidosTable, estilosTable } from '../../../db/schema'
+import { eq, inArray } from 'drizzle-orm'
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
@@ -20,7 +20,18 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const db = getDB(locals.runtime.env)
 
-    // Transaction to delete and insert new styles
+    // Calculate new total
+    let newTotal = 0
+    if (estilosIds.length > 0) {
+      const selectedStyles = await db
+        .select({ precio: estilosTable.precio })
+        .from(estilosTable)
+        .where(inArray(estilosTable.id, estilosIds))
+      
+      newTotal = selectedStyles.reduce((acc, style) => acc + style.precio, 0)
+    }
+
+    // Transaction to update styles and total
     await db.batch([
       db.delete(pedidoItemsTable).where(eq(pedidoItemsTable.pedidoId, pedidoId)),
       ...(estilosIds.length > 0 
@@ -28,7 +39,10 @@ export const POST: APIRoute = async ({ request, locals }) => {
             pedidoId,
             estiloId
           })))]
-        : [])
+        : []),
+      db.update(pedidosTable)
+        .set({ total: newTotal })
+        .where(eq(pedidosTable.id, pedidoId))
     ])
 
     return new Response(null, {
