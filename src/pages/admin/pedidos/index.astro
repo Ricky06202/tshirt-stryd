@@ -517,7 +517,66 @@ const orders = await db
     id="edit-styles-modal"
     class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60 px-4"
   >
-    <!-- ... (existing edit styles modal) ... -->
+    <div
+      class="bg-[#151515] border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200 overflow-y-auto max-h-[90vh]"
+    >
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-orange-600/20 flex items-center justify-center text-orange-400 shadow-inner">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </div>
+        <div>
+          <h4 class="text-2xl font-black text-white">Editar Estilos</h4>
+          <p id="edit-styles-subtitle" class="text-orange-400 font-bold tracking-widest text-xs uppercase"></p>
+        </div>
+      </div>
+      
+      <form method="post" action="/api/pedidos/update-styles" id="edit-styles-form" class="space-y-6">
+        <input type="hidden" name="id" id="edit-styles-id" />
+        
+        <div class="space-y-4">
+          {collectionNumbers.map(collNum => (
+            <div class="space-y-2">
+              <h5 class="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] border-b border-white/5 pb-1">
+                Colección {collNum}
+              </h5>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {groupedStyles[collNum].map(estilo => (
+                  <label class="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group">
+                    <input 
+                      type="checkbox" 
+                      name="estilos" 
+                      value={estilo.id}
+                      class="w-4 h-4 rounded border-white/10 bg-black/40 text-orange-500 focus:ring-orange-500/20"
+                    />
+                    <span class="text-[10px] font-bold text-gray-400 group-hover:text-white transition-colors truncate">
+                      {estilo.nombre}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button
+            type="button"
+            id="edit-styles-cancel"
+            class="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg shadow-orange-600/20 transition-all active:scale-95"
+          >
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Modal de Editar Fecha -->
@@ -525,7 +584,52 @@ const orders = await db
     id="edit-date-modal"
     class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60 px-4"
   >
-    <!-- ... (existing edit date modal) ... -->
+    <div
+      class="bg-[#151515] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-200"
+    >
+      <div class="flex items-center gap-4 mb-6">
+        <div class="w-14 h-14 rounded-2xl bg-purple-600/20 flex items-center justify-center text-purple-400 shadow-inner">
+          <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <div>
+          <h4 class="text-2xl font-black text-white">Editar Fecha</h4>
+          <p id="edit-date-subtitle" class="text-purple-400 font-bold tracking-widest text-xs uppercase"></p>
+        </div>
+      </div>
+      
+      <form method="post" action="/api/pedidos/update-date" id="edit-date-form" class="space-y-4">
+        <input type="hidden" name="id" id="edit-date-id" />
+        
+        <div class="space-y-1">
+          <label class="text-xs font-bold text-gray-400 uppercase ml-1">Nueva Fecha</label>
+          <input 
+            type="date" 
+            name="date" 
+            id="edit-date-input" 
+            class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 focus:ring-2 focus:ring-purple-500 outline-none text-lg font-bold text-white"
+            required
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <button
+            type="button"
+            id="edit-date-cancel"
+            class="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="px-4 py-3 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold shadow-lg shadow-purple-600/20 transition-all active:scale-95"
+          >
+            Actualizar
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 
   <!-- Modal de Informe -->
@@ -592,7 +696,19 @@ const orders = await db
     import { jsPDF } from 'jspdf';
     import autoTable from 'jspdf-autotable';
 
-    const modal = document.getElementById('delete-modal');
+    console.log('Admin Pedidos Script Loaded');
+    
+    const elements = {
+      modal: document.getElementById('delete-modal'),
+      abonoModal: document.getElementById('abono-modal'),
+      editStylesModal: document.getElementById('edit-styles-modal'),
+      editDateModal: document.getElementById('edit-date-modal'),
+      reportModal: document.getElementById('report-modal'),
+      reportOpenBtn: document.getElementById('report-open')
+    };
+    console.log('Modal elements status:', elements);
+
+    const modal = elements.modal;
     const deleteIdInput = document.getElementById('delete-id');
     const cancelBtn = document.getElementById('delete-cancel');
 
@@ -627,11 +743,24 @@ const orders = await db
     const reportToInput = document.getElementById('report-to') as HTMLInputElement;
     const headerElement = document.querySelector('header[data-orders]');
 
+    // Report Modal Logic
+    reportOpenBtn?.addEventListener('click', () => {
+      console.log('Opening report modal');
+      const today = new Date().toISOString().split('T')[0];
+      if (reportFromInput) reportFromInput.value = today;
+      if (reportToInput) reportToInput.value = today;
+      
+      if (reportModal) {
+        reportModal.classList.remove('hidden');
+        reportModal.classList.add('flex');
+      }
+    });
+
     document.addEventListener('click', (ev) => {
       const target = ev.target as HTMLElement | null;
       if (!target) return;
       
-      // Delete Modal Logic
+      console.log('Click detected on:', target);
       const deleteButton = target.closest('[data-delete-id]') as HTMLElement | null;
       if (deleteButton) {
         const id = deleteButton.getAttribute('data-delete-id');
@@ -710,21 +839,13 @@ const orders = await db
     });
 
     // Report Logic
-    reportOpenBtn?.addEventListener('click', () => {
-      const today = new Date().toISOString().split('T')[0];
-      if (reportFromInput) reportFromInput.value = today;
-      if (reportToInput) reportToInput.value = today;
-      
-      reportModal?.classList.remove('hidden');
-      reportModal?.classList.add('flex');
-    });
-
     reportCancelBtn?.addEventListener('click', () => {
       reportModal?.classList.add('hidden');
       reportModal?.classList.remove('flex');
     });
 
     reportGenerateBtn?.addEventListener('click', () => {
+      console.log('Generating PDF...');
       const from = reportFromInput?.value;
       const to = reportToInput?.value;
       const ordersData = headerElement?.getAttribute('data-orders');
