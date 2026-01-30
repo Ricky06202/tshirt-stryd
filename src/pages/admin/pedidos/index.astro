@@ -86,6 +86,7 @@ const orders = await db
           orders.map((order) => {
             const isPagado = order.pagado;
             const isAbonado = order.abonado > 0 && !isPagado;
+            const saldoPendiente = order.total - order.abonado;
             const porcentajeAbonado = Math.round((order.abonado / order.total) * 100);
             const statusColor = isPagado ? 'text-green-500' : isAbonado ? 'text-blue-400' : 'text-orange-500';
             const estilosArray = order.estilos ? order.estilos.split(', ') : [];
@@ -97,8 +98,15 @@ const orders = await db
                     <h3 class="text-lg font-bold text-white leading-tight">{order.persona}</h3>
                     <p class="text-gray-400 italic text-sm">"{order.nombre}"</p>
                   </div>
-                  <div class={`text-xl font-black ${statusColor}`}>
-                    ${order.total}
+                  <div class="text-right">
+                    <div class={`text-xl font-black ${statusColor}`}>
+                      ${order.total}
+                    </div>
+                    {!isPagado && (
+                      <div class="text-[10px] font-bold text-red-400/80 uppercase tracking-tighter mt-1">
+                        Saldo: ${saldoPendiente}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -219,6 +227,7 @@ const orders = await db
                 const isPagado = order.pagado;
                 const isAbonado = order.abonado > 0 && !isPagado;
                  const isPendiente = !isPagado && !isAbonado;
+                 const saldoPendiente = order.total - order.abonado;
                  const porcentajeAbonado = Math.round((order.abonado / order.total) * 100);
                  const estilosArray = order.estilos ? order.estilos.split(', ') : [];
                  
@@ -248,8 +257,15 @@ const orders = await db
                         </div>
                      </td>
                      <td class="px-6 py-4 font-bold">{order.talla}</td>
-                    <td class={`px-6 py-4 font-black ${statusColor}`}>
-                      ${order.total}
+                    <td class="px-6 py-4">
+                      <div class={`font-black ${statusColor}`}>
+                        ${order.total}
+                      </div>
+                      {!isPagado && (
+                        <div class="text-[10px] font-bold text-red-400/70 uppercase tracking-tighter">
+                          Saldo: ${saldoPendiente}
+                        </div>
+                      )}
                     </td>
                     <td class="px-6 py-4">
                       {isPagado ? (
