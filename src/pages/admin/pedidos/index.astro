@@ -34,6 +34,7 @@ const orders = await db
     total: pedidosTable.total,
     pagado: pedidosTable.pagado,
     abonado: pedidosTable.abonado,
+    createdAt: pedidosTable.createdAt,
     estilos: sql<string>`group_concat(${estilosTable.nombre}, ', ')`,
     estiloIds: sql<string>`group_concat(${estilosTable.id}, ',')`,
     talla: tallasTable.talla,
@@ -90,12 +91,22 @@ const orders = await db
             const porcentajeAbonado = Math.round((order.abonado / order.total) * 100);
             const statusColor = isPagado ? 'text-green-500' : isAbonado ? 'text-blue-400' : 'text-orange-500';
             const estilosArray = order.estilos ? order.estilos.split(', ') : [];
+            const fecha = order.createdAt ? new Date(order.createdAt).toLocaleDateString('es-ES', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric'
+            }) : '---';
 
             return (
               <div class="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4 backdrop-blur-sm">
                 <div class="flex justify-between items-start">
                   <div class="space-y-1">
-                    <h3 class="text-lg font-bold text-white leading-tight">{order.persona}</h3>
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-lg font-bold text-white leading-tight">{order.persona}</h3>
+                      <span class="text-[10px] font-medium text-gray-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+                        {fecha}
+                      </span>
+                    </div>
                     <p class="text-gray-400 italic text-sm">"{order.nombre}"</p>
                   </div>
                   <div class="text-right">
@@ -212,6 +223,7 @@ const orders = await db
         <table class="w-full text-left">
           <thead>
             <tr class="border-b border-white/10 bg-white/5">
+              <th class="px-6 py-4 font-bold text-gray-300">Fecha</th>
               <th class="px-6 py-4 font-bold text-gray-300">Cliente</th>
               <th class="px-6 py-4 font-bold text-gray-300">Nombre Camisa</th>
               <th class="px-6 py-4 font-bold text-gray-300">Estilos</th>
@@ -230,6 +242,11 @@ const orders = await db
                  const saldoPendiente = order.total - order.abonado;
                  const porcentajeAbonado = Math.round((order.abonado / order.total) * 100);
                  const estilosArray = order.estilos ? order.estilos.split(', ') : [];
+                 const fecha = order.createdAt ? new Date(order.createdAt).toLocaleDateString('es-ES', {
+                   day: '2-digit',
+                   month: '2-digit',
+                   year: 'numeric'
+                 }) : '---';
                  
                  const statusColor = isPagado 
                    ? 'text-green-500' 
@@ -239,6 +256,9 @@ const orders = await db
 
                  return (
                    <tr class="hover:bg-white/5 transition-colors group">
+                     <td class="px-6 py-4 text-sm text-gray-500 font-medium">
+                       {fecha}
+                     </td>
                      <td class="px-6 py-4 font-bold">{order.persona}</td>
                      <td class="px-6 py-4 text-gray-400 italic">
                        "{order.nombre}"

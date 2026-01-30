@@ -1,4 +1,5 @@
 import { int, sqliteTable, text, real } from 'drizzle-orm/sqlite-core'
+import { sql } from 'drizzle-orm'
 
 export const tallasTable = sqliteTable('tallas', {
   id: int('id').primaryKey({ autoIncrement: true }),
@@ -24,6 +25,7 @@ export const pedidosTable = sqliteTable('pedidos', {
   total: real('total').notNull(),
   pagado: int('pagado').notNull(), // 0 para no pagado, 1 para pagado (o boolean)
   abonado: real('abonado').notNull().default(0),
+  createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
 })
 
 export const pedidoItemsTable = sqliteTable('pedido_items', {
