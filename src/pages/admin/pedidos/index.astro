@@ -57,7 +57,7 @@ const orders = await db
 <Layout>
   <main class="py-10 md:py-20 px-4 sm:px-6 min-h-screen">
     <div class="max-w-5xl mx-auto">
-      <header class="mb-12 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+      <header class="mb-12 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4" data-orders={JSON.stringify(orders)}>
         <div>
           <a
             href="/admin"
@@ -74,6 +74,16 @@ const orders = await db
           <h1 class="text-3xl sm:text-4xl font-bold text-white uppercase tracking-tight">Gestión de Pedidos</h1>
         </div>
         <div class="flex items-center gap-4">
+          <button
+            type="button"
+            id="report-open"
+            class="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white transition-all cursor-pointer text-sm font-bold"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Generar Informe
+          </button>
           <div class="text-gray-400 font-medium bg-white/5 px-4 py-2 rounded-full border border-white/10 text-sm">
             Total: <span class="text-white font-bold">{orders.length}</span> pedidos
           </div>
@@ -103,9 +113,16 @@ const orders = await db
                   <div class="space-y-1">
                     <div class="flex items-center gap-2">
                       <h3 class="text-lg font-bold text-white leading-tight">{order.persona}</h3>
-                      <span class="text-[10px] font-medium text-gray-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/5">
+                      <button
+                        type="button"
+                        class="text-[10px] font-medium text-gray-500 bg-white/5 px-1.5 py-0.5 rounded border border-white/5 hover:bg-white/10 hover:text-white transition-colors cursor-pointer"
+                        data-edit-date-id={order.id}
+                        data-edit-date-current={order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : ''}
+                        data-edit-date-persona={order.persona}
+                        title="Editar fecha"
+                      >
                         {fecha}
-                      </span>
+                      </button>
                     </div>
                     <p class="text-gray-400 italic text-sm">"{order.nombre}"</p>
                   </div>
@@ -257,7 +274,19 @@ const orders = await db
                  return (
                    <tr class="hover:bg-white/5 transition-colors group">
                      <td class="px-6 py-4 text-sm text-gray-500 font-medium">
-                       {fecha}
+                       <button
+                         type="button"
+                         class="hover:text-white transition-colors cursor-pointer flex items-center gap-1.5 group/date"
+                         data-edit-date-id={order.id}
+                         data-edit-date-current={order.createdAt ? new Date(order.createdAt).toISOString().split('T')[0] : ''}
+                         data-edit-date-persona={order.persona}
+                         title="Editar fecha"
+                       >
+                         {fecha}
+                         <svg class="w-3 h-3 opacity-0 group-hover/date:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                         </svg>
+                       </button>
                      </td>
                      <td class="px-6 py-4 font-bold">{order.persona}</td>
                      <td class="px-6 py-4 text-gray-400 italic">
@@ -488,73 +517,81 @@ const orders = await db
     id="edit-styles-modal"
     class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60 px-4"
   >
+    <!-- ... (existing edit styles modal) ... -->
+  </div>
+
+  <!-- Modal de Editar Fecha -->
+  <div
+    id="edit-date-modal"
+    class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60 px-4"
+  >
+    <!-- ... (existing edit date modal) ... -->
+  </div>
+
+  <!-- Modal de Informe -->
+  <div
+    id="report-modal"
+    class="fixed inset-0 z-40 hidden items-center justify-center bg-black/60 px-4"
+  >
     <div
-      class="bg-[#151515] border border-white/10 rounded-2xl p-6 w-full max-w-lg shadow-2xl animate-in fade-in zoom-in duration-200"
+      class="bg-[#151515] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in duration-200"
     >
       <div class="flex items-center gap-4 mb-6">
-        <div class="w-14 h-14 rounded-2xl bg-orange-600/20 flex items-center justify-center text-orange-400 shadow-inner">
+        <div class="w-14 h-14 rounded-2xl bg-green-600/20 flex items-center justify-center text-green-400 shadow-inner">
           <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
         </div>
         <div>
-          <h4 class="text-2xl font-black text-white">Editar Estilos</h4>
-          <p id="edit-styles-subtitle" class="text-orange-400 font-bold tracking-widest text-xs uppercase"></p>
+          <h4 class="text-2xl font-black text-white">Generar Informe</h4>
+          <p class="text-green-400 font-bold tracking-widest text-xs uppercase">Filtrar por Fechas</p>
         </div>
       </div>
       
-      <form method="post" action="/api/pedidos/update-styles" id="edit-styles-form" class="space-y-4">
-        <input type="hidden" name="id" id="edit-styles-id" />
-        
-        <div class="space-y-3">
-          <label class="text-xs font-bold text-gray-400 uppercase ml-1">Seleccionar Estilos</label>
-          <div class="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-            {collectionNumbers.map((num) => (
-              <div class="space-y-3">
-                <div class="flex items-center gap-3">
-                  <span class="text-[10px] font-black text-orange-500 uppercase tracking-[0.2em]">Colección #{num}</span>
-                  <div class="h-px bg-white/10 flex-1"></div>
-                </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {groupedStyles[num].map((estilo) => (
-                    <label class="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 cursor-pointer hover:bg-white/10 transition-colors group">
-                      <input 
-                        type="checkbox" 
-                        name="estilos" 
-                        value={estilo.id} 
-                        class="w-5 h-5 rounded border-white/20 bg-black/40 text-orange-500 focus:ring-orange-500 focus:ring-offset-0 transition-all"
-                      />
-                      <div class="flex flex-col">
-                        <span class="text-sm font-bold text-white group-hover:text-orange-400 transition-colors">{estilo.nombre}</span>
-                      </div>
-                    </label>
-                  ))}
-                </div>
-              </div>
-            ))}
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Desde</label>
+            <input 
+              type="date" 
+              id="report-from" 
+              class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-green-500 outline-none text-sm font-bold text-white"
+            />
+          </div>
+          <div class="space-y-1">
+            <label class="text-[10px] font-bold text-gray-400 uppercase ml-1">Hasta</label>
+            <input 
+              type="date" 
+              id="report-to" 
+              class="w-full bg-black/40 border border-white/10 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-green-500 outline-none text-sm font-bold text-white"
+            />
           </div>
         </div>
 
-        <div class="grid grid-cols-2 gap-3 pt-4">
+        <div class="grid grid-cols-2 gap-3 pt-2">
           <button
             type="button"
-            id="edit-styles-cancel"
+            id="report-cancel"
             class="px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold transition-colors"
           >
             Cancelar
           </button>
           <button
-            type="submit"
-            class="px-4 py-3 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-bold shadow-lg shadow-orange-600/20 transition-all active:scale-95"
+            type="button"
+            id="report-generate"
+            class="px-4 py-3 rounded-xl bg-green-600 hover:bg-green-700 text-white font-bold shadow-lg shadow-green-600/20 transition-all active:scale-95 flex items-center justify-center gap-2"
           >
-            Guardar Cambios
+            Descargar PDF
           </button>
         </div>
-      </form>
+      </div>
     </div>
   </div>
 
   <script>
+    import { jsPDF } from 'jspdf';
+    import autoTable from 'jspdf-autotable';
+
     const modal = document.getElementById('delete-modal');
     const deleteIdInput = document.getElementById('delete-id');
     const cancelBtn = document.getElementById('delete-cancel');
@@ -573,6 +610,22 @@ const orders = await db
     const editStylesSubtitle = document.getElementById('edit-styles-subtitle');
     const editStylesCancelBtn = document.getElementById('edit-styles-cancel');
     const editStylesForm = document.getElementById('edit-styles-form') as HTMLFormElement;
+
+    // Edit Date Elements
+    const editDateModal = document.getElementById('edit-date-modal');
+    const editDateIdInput = document.getElementById('edit-date-id') as HTMLInputElement;
+    const editDateInput = document.getElementById('edit-date-input') as HTMLInputElement;
+    const editDateSubtitle = document.getElementById('edit-date-subtitle');
+    const editDateCancelBtn = document.getElementById('edit-date-cancel');
+
+    // Report Elements
+    const reportModal = document.getElementById('report-modal');
+    const reportOpenBtn = document.getElementById('report-open');
+    const reportCancelBtn = document.getElementById('report-cancel');
+    const reportGenerateBtn = document.getElementById('report-generate');
+    const reportFromInput = document.getElementById('report-from') as HTMLInputElement;
+    const reportToInput = document.getElementById('report-to') as HTMLInputElement;
+    const headerElement = document.querySelector('header[data-orders]');
 
     document.addEventListener('click', (ev) => {
       const target = ev.target as HTMLElement | null;
@@ -600,7 +653,6 @@ const orders = await db
         if (!id || !abonoModal || !abonoIdInput || !abonoMontoInput) return;
 
         abonoIdInput.value = id;
-        // Lógica del 50%: si no hay abono, sugerir el 50%. Si ya hay, mostrar el actual.
         const sugerido = actual > 0 ? actual : (total / 2);
         abonoMontoInput.value = sugerido.toFixed(2);
         
@@ -624,7 +676,6 @@ const orders = await db
         editStylesIdInput.value = id;
         if (editStylesSubtitle) editStylesSubtitle.textContent = persona;
 
-        // Reset and Set Checkboxes
         const checkboxes = editStylesForm.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>;
         checkboxes.forEach(cb => {
           cb.checked = currentIds.includes(cb.value);
@@ -634,6 +685,114 @@ const orders = await db
         editStylesModal.classList.add('flex');
         return;
       }
+
+      // Edit Date Modal Logic
+      const editDateButton = target.closest('[data-edit-date-id]') as HTMLElement | null;
+      if (editDateButton) {
+        const id = editDateButton.getAttribute('data-edit-date-id');
+        const persona = editDateButton.getAttribute('data-edit-date-persona');
+        const currentDate = editDateButton.getAttribute('data-edit-date-current');
+
+        if (!id || !editDateModal || !editDateIdInput || !editDateInput) return;
+
+        editDateIdInput.value = id;
+        if (editDateSubtitle) editDateSubtitle.textContent = persona;
+        if (currentDate) {
+          editDateInput.value = currentDate;
+        } else {
+          editDateInput.value = new Date().toISOString().split('T')[0];
+        }
+
+        editDateModal.classList.remove('hidden');
+        editDateModal.classList.add('flex');
+        return;
+      }
+    });
+
+    // Report Logic
+    reportOpenBtn?.addEventListener('click', () => {
+      const today = new Date().toISOString().split('T')[0];
+      if (reportFromInput) reportFromInput.value = today;
+      if (reportToInput) reportToInput.value = today;
+      
+      reportModal?.classList.remove('hidden');
+      reportModal?.classList.add('flex');
+    });
+
+    reportCancelBtn?.addEventListener('click', () => {
+      reportModal?.classList.add('hidden');
+      reportModal?.classList.remove('flex');
+    });
+
+    reportGenerateBtn?.addEventListener('click', () => {
+      const from = reportFromInput?.value;
+      const to = reportToInput?.value;
+      const ordersData = headerElement?.getAttribute('data-orders');
+
+      if (!from || !to || !ordersData) return;
+
+      const orders = JSON.parse(ordersData);
+      const fromDate = new Date(from);
+      fromDate.setHours(0, 0, 0, 0);
+      const toDate = new Date(to);
+      toDate.setHours(23, 59, 59, 999);
+
+      const filteredOrders = orders.filter((order: any) => {
+        if (!order.createdAt) return false;
+        const orderDate = new Date(order.createdAt);
+        return orderDate >= fromDate && orderDate <= toDate;
+      });
+
+      if (filteredOrders.length === 0) {
+        alert('No hay pedidos en el rango de fechas seleccionado.');
+        return;
+      }
+
+      const doc = new jsPDF();
+      
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Informe de Pedidos', 14, 20);
+      
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Desde: ${from} Hasta: ${to}`, 14, 28);
+      doc.text(`Generado el: ${new Date().toLocaleString()}`, 14, 33);
+
+      const tableData = filteredOrders.map((order: any) => [
+        order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '---',
+        order.persona,
+        order.nombre,
+        order.talla,
+        `$${order.total}`,
+        order.pagado ? 'PAGADO' : (order.abonado > 0 ? `ABONADO ($${order.abonado})` : 'PENDIENTE')
+      ]);
+
+      autoTable(doc, {
+        startY: 40,
+        head: [['Fecha', 'Cliente', 'Nombre Camisa', 'Talla', 'Total', 'Estado']],
+        body: tableData,
+        headStyles: { fillColor: [21, 21, 21], textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        margin: { top: 40 },
+      });
+
+      // Total info
+      const finalY = (doc as any).lastAutoTable.finalY || 40;
+      const totalAmount = filteredOrders.reduce((acc: number, o: any) => acc + o.total, 0);
+      const totalPaid = filteredOrders.reduce((acc: number, o: any) => acc + (o.pagado ? o.total : o.abonado), 0);
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.text(`Total de pedidos: ${filteredOrders.length}`, 14, finalY + 15);
+      doc.text(`Monto total: $${totalAmount.toFixed(2)}`, 14, finalY + 22);
+      doc.text(`Monto recaudado: $${totalPaid.toFixed(2)}`, 14, finalY + 29);
+
+      doc.save(`informe-pedidos-${from}-a-${to}.pdf`);
+      
+      reportModal?.classList.add('hidden');
+      reportModal?.classList.remove('flex');
     });
 
     cancelBtn?.addEventListener('click', () => {
@@ -652,8 +811,13 @@ const orders = await db
       editStylesModal?.classList.remove('flex');
     });
 
+    editDateCancelBtn?.addEventListener('click', () => {
+      editDateModal?.classList.add('hidden');
+      editDateModal?.classList.remove('flex');
+    });
+
     // Close on backdrop click
-    [modal, abonoModal, editStylesModal].forEach(m => {
+    [modal, abonoModal, editStylesModal, editDateModal, reportModal].forEach(m => {
       m?.addEventListener('click', (ev) => {
         if (ev.target === m) {
           m.classList.add('hidden');
