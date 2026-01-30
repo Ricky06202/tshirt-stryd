@@ -900,18 +900,20 @@ const orders = await db
         order.estilos || '---',
         order.talla,
         `$${order.total}`,
+        `$${order.pagado ? 0 : (order.total - order.abonado)}`,
         order.pagado ? 'PAGADO' : (order.abonado > 0 ? `ABONADO ($${order.abonado})` : 'PENDIENTE')
       ]);
 
       autoTable(doc, {
         startY: 40,
-        head: [['Fecha', 'Cliente', 'Nombre Camisa', 'Estilos', 'Talla', 'Total', 'Estado']],
+        head: [['Fecha', 'Cliente', 'Nombre Camisa', 'Estilos', 'Talla', 'Total', 'Saldo', 'Estado']],
         body: tableData,
         headStyles: { fillColor: [21, 21, 21], textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [245, 245, 245] },
         styles: { fontSize: 8, cellPadding: 2 },
         columnStyles: {
-          3: { cellWidth: 40 } // Give more space to "Estilos" column
+          3: { cellWidth: 35 }, // Estilos
+          6: { cellWidth: 15 }  // Saldo
         },
         margin: { top: 40 },
       });
@@ -920,12 +922,14 @@ const orders = await db
       const finalY = (doc as any).lastAutoTable.finalY || 40;
       const totalAmount = filteredOrders.reduce((acc: number, o: any) => acc + o.total, 0);
       const totalPaid = filteredOrders.reduce((acc: number, o: any) => acc + (o.pagado ? o.total : o.abonado), 0);
+      const totalPending = totalAmount - totalPaid;
       
       doc.setFontSize(12);
       doc.setTextColor(0);
       doc.text(`Total de pedidos: ${filteredOrders.length}`, 14, finalY + 15);
       doc.text(`Monto total: $${totalAmount.toFixed(2)}`, 14, finalY + 22);
       doc.text(`Monto recaudado: $${totalPaid.toFixed(2)}`, 14, finalY + 29);
+      doc.text(`Monto pendiente: $${totalPending.toFixed(2)}`, 14, finalY + 36);
 
       doc.save(`informe-pedidos-${from}-a-${to}.pdf`);
       
