@@ -1,6 +1,7 @@
 ---
 import Layout from '../layouts/Layout.astro'
 import HeroCarousel from '../components/HeroCarousel'
+import ProductCard from '../components/ProductCard'
 import { getDB } from '../db'
 import { estilosTable } from '../db/schema'
 import { sql } from 'drizzle-orm'
@@ -14,24 +15,27 @@ const allStyles = await db
     nombre: estilosTable.nombre,
     imagen: estilosTable.imagen,
     estilo: estilosTable.estilo,
+    precio: estilosTable.precio,
   })
   .from(estilosTable)
 
 // Agrupar por categoría
 const stylesByCategory: Record<number, any[]> = {}
-allStyles.forEach(s => {
+allStyles.forEach((s) => {
   if (!stylesByCategory[s.estilo]) stylesByCategory[s.estilo] = []
   stylesByCategory[s.estilo].push(s)
 })
 
 // Mezclar categorías y sacar uno de cada una de forma rotativa
-const categories = Object.keys(stylesByCategory).map(Number).sort((a, b) => b - a)
-const representativeStyles = []
+const categories = Object.keys(stylesByCategory)
+  .map(Number)
+  .sort((a, b) => b - a)
+const representativeStyles: typeof allStyles = []
 let maxPerCategory = 2 // Intentamos sacar hasta 2 de cada categoría si hay suficientes
 let addedCount = 0
 
 for (let i = 0; i < maxPerCategory; i++) {
-  categories.forEach(cat => {
+  categories.forEach((cat) => {
     if (stylesByCategory[cat][i]) {
       representativeStyles.push(stylesByCategory[cat][i])
     }
@@ -47,7 +51,7 @@ representativeStyles.sort(() => Math.random() - 0.5)
     class="min-h-screen flex flex-col items-center justify-center p-6 text-center relative overflow-hidden"
   >
     <HeroCarousel client:load styles={representativeStyles} />
-    
+
     <div
       class="max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 z-30"
     >
@@ -146,6 +150,56 @@ representativeStyles.sort(() => Math.random() - 0.5)
             Garantía de satisfacción total en cada una de tus compras.
           </p>
         </div>
+      </div>
+    </div>
+    <div class="py-24 w-full max-w-7xl mx-auto px-6">
+      <div class="text-center mb-16 space-y-4">
+        <h2
+          class="text-4xl md:text-5xl font-bold bg-linear-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent inline-block"
+        >
+          Colección Exclusiva
+        </h2>
+        <p class="text-gray-400 max-w-2xl mx-auto text-lg">
+          Descubre nuestros diseños más populares. Cada pieza es única y
+          fabricada con los más altos estándares.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {
+          representativeStyles
+            .slice(0, 6)
+            .map((style) => (
+              <ProductCard
+                client:visible
+                id={style.id}
+                nombre={style.nombre}
+                imagen={style.imagen}
+                precio={style.precio}
+              />
+            ))
+        }
+      </div>
+
+      <div class="mt-16 text-center">
+        <a
+          href="/nuevo-pedido"
+          class="inline-flex items-center gap-2 text-orange-500 hover:text-orange-400 font-semibold transition-colors group"
+        >
+          Ver catálogo completo
+          <svg
+            class="w-5 h-5 transition-transform group-hover:translate-x-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+          </svg>
+        </a>
       </div>
     </div>
   </main>
