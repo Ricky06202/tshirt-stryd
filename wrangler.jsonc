@@ -2,7 +2,10 @@
   "main": "dist/_worker.js/index.js",
   "name": "tshirt-stryd",
   "compatibility_date": "2026-01-21",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
   "assets": {
     "binding": "ASSETS",
     "directory": "./dist",
@@ -14,7 +17,7 @@
     {
       "binding": "DB",
       "database_name": "tshirt-stryd",
-      "database_id": "3c1b11b0-1122-4382-b74f-e682334f2289",
+      "database_id": "48f82131-79e6-4d64-ae64-ed3da7fbe113",
       "remote": true,
     },
   ],
