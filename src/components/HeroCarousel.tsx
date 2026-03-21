@@ -11,13 +11,13 @@ interface HeroCarouselProps {
 }
 
 const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
-  if (styles.length === 0) return null;
+  if (!styles || styles.length === 0) return null;
 
   // Para un bucle infinito perfecto, duplicamos el contenido
   const doubleStyles = [...styles, ...styles];
 
   return (
-    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none select-none" suppressHydrationWarning>
+    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none select-none">
       {/* Capas de degradado para integración */}
       <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/40 to-black z-20" />
       <div className="absolute inset-0 bg-linear-to-b from-black via-transparent to-black z-20" />
