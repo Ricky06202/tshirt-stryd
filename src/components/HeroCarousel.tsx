@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
 interface Style {
   id: number;
@@ -11,29 +11,19 @@ interface HeroCarouselProps {
 }
 
 const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
-  if (styles.length === 0 || !isMounted) {
-    return (
-      <div className="absolute inset-0 -z-10 bg-black pointer-events-none" />
-    );
-  }
+  if (styles.length === 0) return null;
 
   // Para un bucle infinito perfecto, duplicamos el contenido
   const doubleStyles = [...styles, ...styles];
 
   return (
-    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none select-none">
+    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none select-none" suppressHydrationWarning>
       {/* Capas de degradado para integración */}
       <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/40 to-black z-20" />
       <div className="absolute inset-0 bg-linear-to-b from-black via-transparent to-black z-20" />
       
       {/* Contenedor del Marquee */}
-      <div className="flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-20">
+      <div className="flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-40">
         {/* Fila 1: Derecha a Izquierda */}
         <div className="flex gap-8 animate-marquee whitespace-nowrap w-fit">
           {doubleStyles.map((style, i) => (
