@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 
 interface Style {
   id: number;
@@ -11,29 +11,19 @@ interface HeroCarouselProps {
 }
 
 const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
-  // Log inteligente al montar
-  useEffect(() => {
-    console.log('--- HeroCarousel Debug ---');
-    console.log('Total Styles:', styles?.length);
-    if (styles?.length > 0) {
-      console.log('Primeras 5 imágenes:', styles.slice(0, 5).map(s => s.imagen));
-    }
-    console.log('---------------------------');
-  }, [styles]);
-
   if (!styles || styles.length === 0) return null;
 
   // Para un bucle infinito perfecto, duplicamos el contenido
   const doubleStyles = [...styles, ...styles];
 
   return (
-    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none select-none">
-      {/* Capas de degradado para integración */}
-      <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/40 to-black z-20" />
+    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none select-none bg-black">
+      {/* Capas de degradado para integración (Z-INDEX 20) */}
+      <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/20 to-black z-20" />
       <div className="absolute inset-0 bg-linear-to-b from-black via-transparent to-black z-20" />
       
-      {/* Contenedor del Marquee */}
-      <div className="flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-20">
+      {/* Contenedor del Marquee (Z-INDEX 10) con más opacidad */}
+      <div className="relative z-10 flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-30">
         {/* Fila 1: Derecha a Izquierda */}
         <div className="flex gap-8 animate-marquee whitespace-nowrap w-fit">
           {doubleStyles.map((style, i) => (
@@ -46,8 +36,6 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
                 alt={style.nombre}
                 className="w-full h-full object-cover"
                 loading="lazy"
-                onLoad={() => i < 5 && console.log(`✓ Imagen cargada OK: ${style.imagen}`)}
-                onError={() => console.error(`✗ Error cargando imagen: ${style.imagen}`)}
               />
             </div>
           ))}
@@ -78,6 +66,7 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
         }
         @keyframes marquee-reverse {
           0% { transform: translateX(-50%); }
+          100% { transform: translateX(0); }
         }
         .animate-marquee {
           animation: marquee 60s linear infinite;
@@ -87,8 +76,8 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
         }
       `}} />
       
-      {/* Overlay adicional para desenfoque suave */}
-      <div className="absolute inset-0 backdrop-blur-[1px] z-10" />
+      {/* Overlay adicional para desenfoque suave (Z-INDEX 15) */}
+      <div className="absolute inset-0 backdrop-blur-[2px] z-15" />
     </div>
   );
 };
