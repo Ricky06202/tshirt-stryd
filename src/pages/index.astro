@@ -50,7 +50,7 @@ representativeStyles.sort(() => Math.random() - 0.5)
   <main
     class="min-h-screen flex flex-col items-center justify-center p-6 text-center relative overflow-hidden"
   >
-    <HeroCarousel client:only="react" styles={representativeStyles} />
+    <HeroCarousel client:load styles={representativeStyles} />
 
     <div
       class="max-w-3xl space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 z-30"

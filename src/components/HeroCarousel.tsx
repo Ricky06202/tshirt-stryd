@@ -11,19 +11,20 @@ interface HeroCarouselProps {
 }
 
 const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
-  if (!styles || styles.length === 0) return null;
+  if (styles.length === 0) return null;
 
   // Para un bucle infinito perfecto, duplicamos el contenido
+  // y nos aseguramos de que el contenedor se desplace exactamente el 50%
   const doubleStyles = [...styles, ...styles];
 
   return (
-    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none select-none bg-black">
-      {/* Capas de degradado para integración (Z-INDEX 20) */}
-      <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/20 to-black z-20" />
+    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none select-none">
+      {/* Capas de degradado para integración */}
+      <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/40 to-black z-20" />
       <div className="absolute inset-0 bg-linear-to-b from-black via-transparent to-black z-20" />
       
-      {/* Contenedor del Marquee (Z-INDEX 10) con más opacidad */}
-      <div className="relative z-10 flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-30">
+      {/* Contenedor del Marquee */}
+      <div className="flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-20">
         {/* Fila 1: Derecha a Izquierda */}
         <div className="flex gap-8 animate-marquee whitespace-nowrap w-fit">
           {doubleStyles.map((style, i) => (
@@ -76,8 +77,8 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
         }
       `}} />
       
-      {/* Overlay adicional para desenfoque suave (Z-INDEX 15) */}
-      <div className="absolute inset-0 backdrop-blur-[2px] z-15" />
+      {/* Overlay adicional para desenfoque suave */}
+      <div className="absolute inset-0 backdrop-blur-[1px] z-10" />
     </div>
   );
 };
