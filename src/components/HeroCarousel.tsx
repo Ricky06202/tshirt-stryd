@@ -19,9 +19,9 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
 
   return (
     <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none select-none">
-      {/* Capas de degradado para integración - SUAVIZADAS */}
-      <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/10 to-black/60 z-20" />
-      <div className="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-black/60 z-20" />
+      {/* Capas de degradado para integración */}
+      <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/40 to-black z-20" />
+      <div className="absolute inset-0 bg-linear-to-b from-black via-transparent to-black z-20" />
       
       {/* Contenedor del Marquee */}
       <div className="flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-20">
