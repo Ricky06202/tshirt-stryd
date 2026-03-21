@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 interface Style {
   id: number;
@@ -11,8 +11,15 @@ interface HeroCarouselProps {
 }
 
 const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
-  // Debug log para ver si llegan los datos al navegador
-  console.log('HeroCarousel Render - Styles Count:', styles?.length);
+  // Log inteligente al montar
+  useEffect(() => {
+    console.log('--- HeroCarousel Debug ---');
+    console.log('Total Styles:', styles?.length);
+    if (styles?.length > 0) {
+      console.log('Primeras 5 imágenes:', styles.slice(0, 5).map(s => s.imagen));
+    }
+    console.log('---------------------------');
+  }, [styles]);
 
   if (!styles || styles.length === 0) return null;
 
@@ -39,6 +46,8 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
                 alt={style.nombre}
                 className="w-full h-full object-cover"
                 loading="lazy"
+                onLoad={() => i < 5 && console.log(`✓ Imagen cargada OK: ${style.imagen}`)}
+                onError={() => console.error(`✗ Error cargando imagen: ${style.imagen}`)}
               />
             </div>
           ))}
@@ -69,7 +78,6 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
         }
         @keyframes marquee-reverse {
           0% { transform: translateX(-50%); }
-          100% { transform: translateX(0); }
         }
         .animate-marquee {
           animation: marquee 60s linear infinite;
