@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Style {
   id: number;
@@ -11,10 +11,19 @@ interface HeroCarouselProps {
 }
 
 const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
-  if (styles.length === 0) return null;
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (styles.length === 0 || !isMounted) {
+    return (
+      <div className="absolute inset-0 -z-10 bg-black pointer-events-none" />
+    );
+  }
 
   // Para un bucle infinito perfecto, duplicamos el contenido
-  // y nos aseguramos de que el contenedor se desplace exactamente el 50%
   const doubleStyles = [...styles, ...styles];
 
   return (
