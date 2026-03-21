@@ -11,6 +11,9 @@ interface HeroCarouselProps {
 }
 
 const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
+  // Debug log para ver si llegan los datos al navegador
+  console.log('HeroCarousel Render - Styles Count:', styles?.length);
+
   if (!styles || styles.length === 0) return null;
 
   // Para un bucle infinito perfecto, duplicamos el contenido
@@ -23,7 +26,7 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
       <div className="absolute inset-0 bg-linear-to-b from-black via-transparent to-black z-20" />
       
       {/* Contenedor del Marquee */}
-      <div className="flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-40">
+      <div className="flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-20">
         {/* Fila 1: Derecha a Izquierda */}
         <div className="flex gap-8 animate-marquee whitespace-nowrap w-fit">
           {doubleStyles.map((style, i) => (
