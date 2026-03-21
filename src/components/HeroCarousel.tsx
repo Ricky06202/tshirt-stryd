@@ -19,12 +19,10 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
 
   return (
     <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none select-none">
-      {/* Capas de degradado para profundidad (Z-20) - Solo afectan al fondo */}
-      <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/5 to-black/60 z-20" />
-      <div className="absolute inset-0 bg-linear-to-b from-black/40 via-transparent to-black/40 z-20" />
+      {/* Sin capas extra encima para no oscurecer el texto */}
       
-      {/* Contenedor del Marquee (Z-0 interno) */}
-      <div className="relative z-0 flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-40">
+      {/* Contenedor del Marquee - Mucha más opacidad para que resalten las camisas */}
+      <div className="relative z-10 flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-50">
         {/* Fila 1: Derecha a Izquierda */}
         <div className="flex gap-8 animate-marquee whitespace-nowrap w-fit">
           {doubleStyles.map((style, i) => (
