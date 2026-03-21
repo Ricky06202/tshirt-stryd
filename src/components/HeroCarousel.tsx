@@ -18,11 +18,13 @@ const HeroCarousel: React.FC<HeroCarouselProps> = ({ styles }) => {
   const doubleStyles = [...styles, ...styles];
 
   return (
-    <div className="absolute inset-0 z-10 overflow-hidden pointer-events-none select-none">
-      {/* Sin capas extra encima para no oscurecer el texto */}
+    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none select-none">
+      {/* Capas de degradado para integración */}
+      <div className="absolute inset-0 bg-radial-at-c from-transparent via-black/40 to-black z-20" />
+      <div className="absolute inset-0 bg-linear-to-b from-black via-transparent to-black z-20" />
       
-      {/* Contenedor del Marquee - Mucha más opacidad para que resalten las camisas */}
-      <div className="relative z-10 flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-50">
+      {/* Contenedor del Marquee */}
+      <div className="flex flex-col gap-8 rotate-[-10deg] scale-150 md:scale-125 opacity-20">
         {/* Fila 1: Derecha a Izquierda */}
         <div className="flex gap-8 animate-marquee whitespace-nowrap w-fit">
           {doubleStyles.map((style, i) => (
