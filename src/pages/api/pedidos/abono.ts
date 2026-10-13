@@ -2,7 +2,6 @@ import type { APIRoute } from 'astro'
 import { getDB } from '../../../db'
 import { pedidosTable } from '../../../db/schema'
 import { eq } from 'drizzle-orm'
-import { notifyDiscord, execCtx } from '../../../lib/discord'
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
@@ -42,13 +41,6 @@ export const POST: APIRoute = async ({ request, locals }) => {
         pagado: pagado
       })
       .where(eq(pedidosTable.id, id))
-
-    // Aviso a Discord (best-effort): pago/abono registrado.
-    try {
-      notifyDiscord(locals.runtime.env, 'pagos',
-        `\u2705 Pago registrado \u2014 Tienda Stryd \u00b7 $${Number(monto).toFixed(2)}${pagado ? ' (completo)' : ' (abono)'} \u00b7 ref #${id}`,
-        execCtx(locals))
-    } catch { /* best-effort */ }
 
     return new Response(null, {
       status: 303,
