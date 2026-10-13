@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro'
 import { getDB } from '../../db'
 import { pedidosTable, pedidoItemsTable, estilosTable } from '../../db/schema'
 import { inArray, sql } from 'drizzle-orm'
+import { notifyDiscord } from '../../lib/discord'
 
 export const POST: APIRoute = async ({ request, locals }) => {
   try {
@@ -72,6 +73,16 @@ export const POST: APIRoute = async ({ request, locals }) => {
     await db.insert(pedidoItemsTable).values(
       estiloIds.map((estiloId: number) => ({ pedidoId, estiloId })),
     )
+
+    // Aviso a Discord (best-effort): nunca altera la respuesta del pedido.
+    try {
+      const _t = Number(total || 0)
+      const _p = String(persona || '').trim().split(/\s+/).filter(Boolean)
+      const _nm = _p.length ? _p[0] + (_p[1] ? ' ' + _p[1].charAt(0) + '.' : '') : ''
+      notifyDiscord(locals.runtime.env, 'pedidos',
+        `\u{1F4E6} Nuevo pedido \u2014 Tienda Stryd${_nm ? ' \u00b7 ' + _nm : ''} \u00b7 $${_t.toFixed(2)}`,
+        locals.runtime.ctx)
+    } catch { /* best-effort */ }
 
     return new Response(
       JSON.stringify({
